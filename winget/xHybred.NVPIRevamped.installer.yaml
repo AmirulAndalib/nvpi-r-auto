@@ -18,10 +18,10 @@ Installers:
     - RelativeFilePath: NVPI Revamped App\NVPI-R.exe
       PortableCommandAlias: nvpi-r
   InstallationMetadata:
-    - DefaultInstallLocation: '%USERPROFILE%\NVPI-R'
-      Files:
-        - RelativeFilePath: NVPI Revamped App\NVPI-R.exe
-          FileType: launch
+    DefaultInstallLocation: '%USERPROFILE%\NVPI-R'
+    Files:
+      - RelativeFilePath: NVPI Revamped App\NVPI-R.exe
+        FileType: launch
 ManifestType: installer
 ManifestVersion: 1.12.0
 
