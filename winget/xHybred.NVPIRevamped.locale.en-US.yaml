@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.9.0.schema.json
 PackageIdentifier: xHybred.NVPIRevamped
 PackageVersion: 7.0.0.0
 PackageLocale: en-US
@@ -20,3 +21,4 @@ Tags:
 ReleaseNotesUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/latest
 ManifestType: defaultLocale
 ManifestVersion: 1.9.0
+

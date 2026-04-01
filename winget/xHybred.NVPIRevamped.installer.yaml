@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
 PackageIdentifier: xHybred.NVPIRevamped
 PackageVersion: 7.0.0.0
 Platform:
@@ -21,3 +22,4 @@ Installers:
       FileType: launch
 ManifestType: installer
 ManifestVersion: 1.9.0
+
