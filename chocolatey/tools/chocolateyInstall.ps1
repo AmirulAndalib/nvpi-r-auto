@@ -3,8 +3,8 @@ $installDir = Join-Path $env:USERPROFILE 'NVPI-R'
 $packageArgs = @{
     packageName   = 'nvpi-r'
     unzipLocation = $installDir
-    url           = 'https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.0.0/NVPI-R.zip'
-    checksum      = '9f884324669199236ef941cf52f09e47a13f25e4a254b16ce0c8e1f275e6e7ac'
+    url           = 'https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.1.0/NVPI-R.zip'
+    checksum      = 'be7d2b59a8c368f477628353238cf0b74575871cf2b5d935f4ffef31ee0deaa9'
     checksumType  = 'sha256'
 }
 
@@ -21,4 +21,5 @@ Install-ChocolateyShortcut `
     -ShortcutFilePath (Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk') `
     -TargetPath $exe `
     -WorkingDirectory (Split-Path $exe)
+
 
