@@ -21,3 +21,4 @@ Install-ChocolateyShortcut `
     -ShortcutFilePath (Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk') `
     -TargetPath $exe `
     -WorkingDirectory (Split-Path $exe)
+
