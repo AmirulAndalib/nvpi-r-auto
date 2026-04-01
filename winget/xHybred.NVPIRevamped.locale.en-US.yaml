@@ -7,7 +7,7 @@ PublisherUrl: https://github.com/xHybred
 PackageName: NVPI Revamped
 PackageUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped
 License: MIT
-LicenseUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/main/LICENSE
+LicenseUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/master/LICENSE
 ShortDescription: Revamped fork of Nvidia Profile Inspector with enhancements and fixes.
 Description: NVPI Revamped is a fork of Nvidia Profile Inspector that adds quality-of-life improvements, UI enhancements, classic dark modes, and additional features for managing Nvidia driver profiles on Windows.
 Tags:
