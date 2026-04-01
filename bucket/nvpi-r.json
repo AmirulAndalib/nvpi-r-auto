@@ -1,0 +1,22 @@
+{
+    "version": "7.0.0.0",
+    "description": "Revamped fork of Nvidia Profile Inspector with enhancements, UI fixes, and quality-of-life improvements.",
+    "homepage": "https://github.com/xHybred/NvidiaProfileInspectorRevamped",
+    "license": "MIT",
+    "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.0.0/NVPI-R.zip",
+    "hash": "9f884324669199236ef941cf52f09e47a13f25e4a254b16ce0c8e1f275e6e7ac",
+    "bin": "NVPI Revamped App\\NVPI-R.exe",
+    "shortcuts": [
+        ["NVPI Revamped App\\NVPI-R.exe", "NVPI Revamped"]
+    ],
+    "persist": [
+        "NVPI Revamped App\\CustomSettingNames.xml",
+        "NVPI Revamped App\\Settings.xml"
+    ],
+    "checkver": {
+        "github": "https://github.com/xHybred/NvidiaProfileInspectorRevamped"
+    },
+    "autoupdate": {
+        "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v$version/NVPI-R.zip"
+    }
+}

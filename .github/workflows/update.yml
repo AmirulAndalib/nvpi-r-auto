@@ -1,0 +1,118 @@
+name: Update Packages
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest release
+        id: release
+        shell: pwsh
+        run: |
+          $response = Invoke-RestMethod `
+            -Uri 'https://api.github.com/repos/xHybred/NvidiaProfileInspectorRevamped/releases/latest' `
+            -Headers @{ Authorization = 'Bearer ${{ secrets.GITHUB_TOKEN }}' }
+          $version = $response.tag_name.TrimStart('v')
+          $asset = $response.assets | Where-Object { $_.name -eq 'NVPI-R.zip' } | Select-Object -First 1
+          $url = $asset.browser_download_url
+          Add-Content $env:GITHUB_OUTPUT "version=$version"
+          Add-Content $env:GITHUB_OUTPUT "url=$url"
+
+      - name: Check current version
+        id: check
+        shell: pwsh
+        run: |
+          $current = if (Test-Path version.txt) { (Get-Content version.txt -Raw).Trim() } else { '' }
+          if ($current -eq '${{ steps.release.outputs.version }}') {
+            Add-Content $env:GITHUB_OUTPUT 'skip=true'
+          } else {
+            Add-Content $env:GITHUB_OUTPUT 'skip=false'
+          }
+
+      - name: Download and hash
+        if: steps.check.outputs.skip != 'true'
+        id: hash
+        shell: pwsh
+        run: |
+          $tmp = Join-Path $env:TEMP 'nvpi-r.zip'
+          Invoke-WebRequest -Uri '${{ steps.release.outputs.url }}' -OutFile $tmp -UseBasicParsing
+          $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
+          Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
+          Remove-Item $tmp -Force
+
+      - name: Update Scoop manifest
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $m = Get-Content bucket/nvpi-r.json -Raw | ConvertFrom-Json
+          $m.version = '${{ steps.release.outputs.version }}'
+          $m.url = '${{ steps.release.outputs.url }}'
+          $m.hash = '${{ steps.hash.outputs.sha256 }}'
+          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json
+
+      - name: Update Chocolatey nuspec
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          [xml]$nuspec = Get-Content chocolatey/nvpi-r.nuspec
+          $nuspec.package.metadata.version = '${{ steps.release.outputs.version }}'
+          $nuspec.Save((Resolve-Path chocolatey/nvpi-r.nuspec).Path)
+
+      - name: Update install script
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $content = Get-Content chocolatey/tools/chocolateyInstall.ps1 -Raw
+          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.release.outputs.url }}'
+          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.hash.outputs.sha256 }}'
+          Set-Content chocolatey/tools/chocolateyInstall.ps1 $content
+
+      - name: Bump version file
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          Set-Content version.txt '${{ steps.release.outputs.version }}'
+
+      - name: Commit and push
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add bucket/nvpi-r.json chocolatey/nvpi-r.nuspec chocolatey/tools/chocolateyInstall.ps1 version.txt
+          git commit -m 'chore: bump to v${{ steps.release.outputs.version }}'
+          git push
+
+      - name: Pack Chocolatey package
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          choco pack chocolatey/nvpi-r.nuspec --out .
+
+      - name: Push to Chocolatey
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $nupkg = (Get-Item 'nvpi-r.*.nupkg').FullName
+          choco push $nupkg --source 'https://push.chocolatey.org' --api-key '${{ secrets.CHOCO_API_KEY }}'
+
+      - name: Submit to WinGet
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing
+          .\wingetcreate.exe update xHybred.NVPIRevamped `
+            -v '${{ steps.release.outputs.version }}' `
+            -u '${{ steps.release.outputs.url }}' `
+            --submit `
+            -t '${{ secrets.WINGET_TOKEN }}'
