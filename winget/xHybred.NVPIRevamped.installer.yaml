@@ -5,6 +5,7 @@ Platform:
 - Windows.Desktop
 MinimumOSVersion: 10.0.0.0
 InstallerType: zip
+UpgradeBehavior: uninstallPrevious
 InstallModes:
 - interactive
 - silent
@@ -12,7 +13,7 @@ InstallModes:
 Installers:
 - Architecture: x64
   InstallerUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.0.0/NVPI-R.zip
-  InstallerSha256: 9f884324669199236ef941cf52f09e47a13f25e4a254b16ce0c8e1f275e6e7ac
+  InstallerSha256: 9F884324669199236EF941CF52F09E47A13F25E4A254B16CE0C8E1F275E6E7AC
   NestedInstallerType: portable
   NestedInstallerFiles:
     - RelativeFilePath: NVPI Revamped App\NVPI-R.exe

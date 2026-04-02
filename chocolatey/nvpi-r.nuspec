@@ -12,6 +12,7 @@
     <docsUrl>https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/master/README.md</docsUrl>
     <bugTrackerUrl>https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues</bugTrackerUrl>
     <licenseUrl>https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/master/LICENSE</licenseUrl>
+    <copyright>Copyright (c) xHybred</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Revamped fork of Nvidia Profile Inspector with enhancements, UI improvements, and additional features for managing Nvidia driver profiles on Windows.</description>
     <summary>Revamped Nvidia Profile Inspector with enhancements and fixes.</summary>

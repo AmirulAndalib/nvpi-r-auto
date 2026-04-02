@@ -1,0 +1,13 @@
+# Auto detect text files and normalise line endings
+* text=auto eol=lf
+
+# PowerShell scripts should use CRLF on Windows
+*.ps1 text eol=crlf
+
+# NuSpec files should use CRLF for XML tooling compatibility
+*.nuspec text eol=crlf
+
+# YAML and JSON use LF
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf

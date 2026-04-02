@@ -1,8 +1,9 @@
 # NVPI Revamped Packages
 
-Unofficial packaging repository for [NVPI Revamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped), a revamped fork of Nvidia Profile Inspector.
-
+[![Update Packages](https://github.com/AmirulAndalib/nvpi-r-auto/actions/workflows/update.yml/badge.svg)](https://github.com/AmirulAndalib/nvpi-r-auto/actions/workflows/update.yml)
 [![Repology](https://repology.org/badge/vertical-allrepos/nvpi-r.svg)](https://repology.org/project/nvpi-r/versions)
+
+Unofficial packaging repository for [NVPI Revamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped), a revamped fork of Nvidia Profile Inspector.
 
 New releases are picked up automatically every 6 hours and published to WinGet, Chocolatey, and Scoop.
 
@@ -10,21 +11,21 @@ New releases are picked up automatically every 6 hours and published to WinGet, 
 
 ## Install
 
-**WinGet**
+### WinGet
 
-```
+```sh
 winget install xHybred.NVPIRevamped
 ```
 
-**Chocolatey**
+### Chocolatey
 
-```
+```sh
 choco install nvpi-r
 ```
 
-**Scoop**
+### Scoop
 
-```
+```sh
 scoop bucket add nvpi-r https://github.com/AmirulAndalib/nvpi-r-auto
 scoop install nvpi-r
 ```
@@ -33,31 +34,31 @@ scoop install nvpi-r
 
 ## Install Location
 
-| Manager    | Path                                        |
-| ---------- | ------------------------------------------- |
-| WinGet     | `%USERPROFILE%\NVPI-R`                    |
-| Chocolatey | `%USERPROFILE%\NVPI-R`                    |
-| Scoop      | `%USERPROFILE%\scoop\apps\nvpi-r\current` |
+| Manager | Path |
+| --- | --- |
+| WinGet | `%USERPROFILE%\NVPI-R` |
+| Chocolatey | `%USERPROFILE%\NVPI-R` |
+| Scoop | `%USERPROFILE%\scoop\apps\nvpi-r\current` |
 
 ---
 
 ## Updating
 
-**WinGet**
+### WinGet
 
-```
+```sh
 winget upgrade xHybred.NVPIRevamped
 ```
 
-**Chocolatey**
+### Chocolatey
 
-```
+```sh
 choco upgrade nvpi-r
 ```
 
-**Scoop**
+### Scoop
 
-```
+```sh
 scoop update nvpi-r
 ```
 
@@ -67,10 +68,10 @@ scoop update nvpi-r
 
 To use the workflow in your own fork, add these repository secrets under Settings > Secrets and variables > Actions:
 
-| Secret            | Description                                                                                                                 |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `CHOCO_API_KEY` | Your Chocolatey.org API key                                                                                                 |
-| `WINGET_TOKEN`  | GitHub PAT with `public_repo` scope, used to submit PRs to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) |
+| Secret | Description |
+| --- | --- |
+| `CHOCO_API_KEY` | Your Chocolatey.org API key |
+| `WINGET_TOKEN` | GitHub PAT with `public_repo` scope, used to submit PRs to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) |
 
 The `GITHUB_TOKEN` provided automatically by GitHub Actions is used to read upstream release data.
 
@@ -87,6 +88,8 @@ For Scoop, no extra steps are needed. Add the bucket with the command above and 
 ---
 
 ## Notes
+
+Desktop and Start Menu shortcuts are created automatically by Chocolatey and Scoop. Old Scoop versions are cleaned up automatically on update.
 
 Settings files (`CustomSettingNames.xml`, `Settings.xml`) are persisted across Scoop updates so your configuration survives upgrades. For WinGet and Chocolatey, the install directory at `%USERPROFILE%\NVPI-R` is left intact on upgrade, so your settings are preserved there too.
 

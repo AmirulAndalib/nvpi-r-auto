@@ -12,10 +12,25 @@
       "NVPI Revamped"
     ]
   ],
+  "post_install": [
+    "$currentDir = Join-Path (Split-Path $dir) 'current'",
+    "$desktop = [Environment]::GetFolderPath('Desktop')",
+    "$wsh = New-Object -ComObject WScript.Shell",
+    "$lnk = $wsh.CreateShortcut(\"$desktop\\NVPI Revamped.lnk\")",
+    "$lnk.TargetPath = \"$currentDir\\NVPI Revamped App\\NVPI-R.exe\"",
+    "$lnk.WorkingDirectory = \"$currentDir\\NVPI Revamped App\"",
+    "$lnk.Save()",
+    "Get-ChildItem (Split-Path $dir) -Directory | Where-Object { $_.Name -ne 'current' -and $_.Name -ne $version } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+  ],
+  "pre_uninstall": [
+    "$desktop = [Environment]::GetFolderPath('Desktop')",
+    "Remove-Item \"$desktop\\NVPI Revamped.lnk\" -Force -ErrorAction SilentlyContinue"
+  ],
   "persist": [
     "NVPI Revamped App\\CustomSettingNames.xml",
     "NVPI Revamped App\\Settings.xml"
   ],
+  "notes": "Desktop and Start Menu shortcuts are created automatically. Settings are persisted across updates.",
   "checkver": {
     "github": "https://github.com/xHybred/NvidiaProfileInspectorRevamped"
   },

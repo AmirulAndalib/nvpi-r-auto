@@ -1,8 +1,15 @@
+$ErrorActionPreference = 'Stop'
+
 $installDir = Join-Path $env:USERPROFILE 'NVPI-R'
 
 $shortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk'
 if (Test-Path $shortcut) {
     Remove-Item $shortcut -Force
+}
+
+$startMenuShortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'NVPI Revamped.lnk'
+if (Test-Path $startMenuShortcut) {
+    Remove-Item $startMenuShortcut -Force
 }
 
 if (Test-Path $installDir) {

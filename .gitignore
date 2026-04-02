@@ -1,0 +1,13 @@
+# Chocolatey build artifacts
+*.nupkg
+
+# WinGet Create binary
+wingetcreate.exe
+
+# Downloaded archives
+*.zip
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

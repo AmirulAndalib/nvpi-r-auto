@@ -1,3 +1,5 @@
+$ErrorActionPreference = 'Stop'
+
 $installDir = Join-Path $env:USERPROFILE 'NVPI-R'
 
 $packageArgs = @{
@@ -19,6 +21,12 @@ if (Test-Path $nested) {
 $exe = Join-Path $installDir 'NVPI Revamped App\NVPI-R.exe'
 Install-ChocolateyShortcut `
     -ShortcutFilePath (Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk') `
+    -TargetPath $exe `
+    -WorkingDirectory (Split-Path $exe)
+
+$startMenu = Join-Path ([Environment]::GetFolderPath('Programs')) 'NVPI Revamped.lnk'
+Install-ChocolateyShortcut `
+    -ShortcutFilePath $startMenu `
     -TargetPath $exe `
     -WorkingDirectory (Split-Path $exe)
 
