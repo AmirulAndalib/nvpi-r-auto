@@ -1,0 +1,53 @@
+name: Bug Report
+description: Report a packaging or installation issue
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** If the bug is in NVPI Revamped itself (not the packaging), please report it upstream at [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues).
+
+  - type: dropdown
+    id: manager
+    attributes:
+      label: Package Manager
+      options:
+        - WinGet
+        - Chocolatey
+        - Scoop
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package Version
+      placeholder: "e.g. 7.0.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce the issue?
+      placeholder: |
+        1. Run `winget install xHybred.NVPIRevamped`
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      description: Paste any relevant error messages or terminal output.
+      render: text

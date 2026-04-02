@@ -1,0 +1,22 @@
+name: Feature Request
+description: Suggest an improvement to the packaging or workflow
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** Feature requests for NVPI Revamped itself should go to [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What would you like to see added or changed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this useful?

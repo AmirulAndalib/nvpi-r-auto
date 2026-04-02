@@ -1,6 +1,14 @@
 # NVPI Revamped Packages
 
 [![Update Packages](https://github.com/AmirulAndalib/nvpi-r-auto/actions/workflows/update.yml/badge.svg)](https://github.com/AmirulAndalib/nvpi-r-auto/actions/workflows/update.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/latest)
+[![Chocolatey Version](https://img.shields.io/chocolatey/v/nvpi-r)](https://community.chocolatey.org/packages/nvpi-r)
+[![Chocolatey Downloads](https://img.shields.io/chocolatey/dt/nvpi-r)](https://community.chocolatey.org/packages/nvpi-r)
+[![Scoop Version](https://img.shields.io/scoop/v/nvpi-r?bucket=https%3A%2F%2Fgithub.com%2FAmirulAndalib%2Fnvpi-r-auto)](https://github.com/AmirulAndalib/nvpi-r-auto/blob/master/bucket/nvpi-r.json)
+[![WinGet](https://img.shields.io/badge/WinGet-xHybred.NVPIRevamped-blue?logo=windows)](https://github.com/microsoft/winget-pkgs/tree/master/manifests/x/xHybred/NVPIRevamped)
+[![License](https://img.shields.io/github/license/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped)
+[![Last Commit](https://img.shields.io/github/last-commit/AmirulAndalib/nvpi-r-auto)](https://github.com/AmirulAndalib/nvpi-r-auto/commits/master)
 [![Repology](https://repology.org/badge/vertical-allrepos/nvpi-r.svg)](https://repology.org/project/nvpi-r/versions)
 
 Unofficial packaging repository for [NVPI Revamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped), a revamped fork of Nvidia Profile Inspector.
