@@ -5,8 +5,8 @@
 [![Chocolatey Version](https://img.shields.io/chocolatey/v/nvpi-r)](https://community.chocolatey.org/packages/nvpi-r)
 [![Chocolatey Downloads](https://img.shields.io/chocolatey/dt/nvpi-r)](https://community.chocolatey.org/packages/nvpi-r)
 [![Scoop Version](https://img.shields.io/scoop/v/nvpi-r?bucket=https%3A%2F%2Fgithub.com%2FAmirulAndalib%2Fnvpi-r-auto)](https://github.com/AmirulAndalib/nvpi-r-auto/blob/master/bucket/nvpi-r.json)
-[![WinGet](https://img.shields.io/badge/WinGet-xHybred.NVPIRevamped-blue?logo=windows)](https://github.com/microsoft/winget-pkgs/tree/master/manifests/x/xHybred/NVPIRevamped)
-[![License](https://img.shields.io/github/license/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/main/LICENSE)
+[![WinGet Version](https://img.shields.io/winget/v/xHybred.NVPIRevamped)](https://github.com/microsoft/winget-pkgs/tree/master/manifests/x/xHybred/NVPIRevamped)
+[![License](https://img.shields.io/github/license/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped/blob/master/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/xHybred/NvidiaProfileInspectorRevamped)](https://github.com/xHybred/NvidiaProfileInspectorRevamped)
 [![Last Commit](https://img.shields.io/github/last-commit/AmirulAndalib/nvpi-r-auto)](https://github.com/AmirulAndalib/nvpi-r-auto/commits/master)
 [![Repology](https://repology.org/badge/vertical-allrepos/nvpi-r.svg)](https://repology.org/project/nvpi-r/versions)
@@ -44,7 +44,7 @@ scoop install nvpi-r
 
 | Manager | Path |
 | --- | --- |
-| WinGet | `%USERPROFILE%\NVPI-R` |
+| WinGet | `%LOCALAPPDATA%\Microsoft\WinGet\Packages\xHybred.NVPIRevamped_Microsoft.Winget.Source_8wekyb3d8bbwe` |
 | Chocolatey | `%USERPROFILE%\NVPI-R` |
 | Scoop | `%USERPROFILE%\scoop\apps\nvpi-r\current` |
 
@@ -97,8 +97,8 @@ For Scoop, no extra steps are needed. Add the bucket with the command above and 
 
 ## Notes
 
-Desktop and Start Menu shortcuts are created automatically by Chocolatey and Scoop. Old Scoop versions are cleaned up automatically on update.
+Desktop and Start Menu shortcuts are created automatically by Chocolatey and Scoop. WinGet does not create shortcuts (platform limitation for portable packages), but adds `nvpi-r` to your PATH so you can launch it from any terminal. Old Scoop versions are cleaned up automatically on update.
 
-Settings files (`CustomSettingNames.xml`, `Settings.xml`) are persisted across Scoop updates so your configuration survives upgrades. For WinGet and Chocolatey, the install directory at `%USERPROFILE%\NVPI-R` is left intact on upgrade, so your settings are preserved there too.
+Settings files (`CustomSettingNames.xml`, `Settings.xml`) are persisted across Scoop updates so your configuration survives upgrades. For Chocolatey, the install directory at `%USERPROFILE%\NVPI-R` is left intact on upgrade, so your settings are preserved there too. WinGet preserves settings in its packages directory across upgrades.
 
 If the zip structure changes in a future upstream release and the Scoop `bin` path breaks, open an issue and it will be patched promptly.
