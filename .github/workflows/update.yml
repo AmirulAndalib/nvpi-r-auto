@@ -111,22 +111,6 @@ jobs:
             Set-Content $file.FullName $content -NoNewline
           }
 
-      - name: Bump version file
-        if: steps.check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          Set-Content version.txt '${{ steps.release.outputs.version }}'
-
-      - name: Commit and push
-        if: steps.check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add bucket/nvpi-r.json chocolatey/nvpi-r.nuspec chocolatey/tools/chocolateyInstall.ps1 winget/ version.txt
-          git commit -m 'chore: bump to v${{ steps.release.outputs.version }}'
-          git push
-
       - name: Pack Chocolatey package
         if: steps.check.outputs.skip != 'true'
         shell: pwsh
@@ -155,3 +139,19 @@ jobs:
             --urls '${{ steps.release.outputs.url }}' `
             --version '${{ steps.release.outputs.version }}' `
             xHybred.NVPIRevamped
+
+      - name: Bump version file
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          Set-Content version.txt '${{ steps.release.outputs.version }}'
+
+      - name: Commit and push
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add bucket/nvpi-r.json chocolatey/nvpi-r.nuspec chocolatey/tools/chocolateyInstall.ps1 winget/ version.txt
+          git commit -m 'chore: bump to v${{ steps.release.outputs.version }}'
+          git push
