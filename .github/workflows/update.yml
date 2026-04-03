@@ -119,6 +119,7 @@ jobs:
 
       - name: Push to Chocolatey
         if: steps.check.outputs.skip != 'true'
+        continue-on-error: true
         shell: pwsh
         env:
           CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
