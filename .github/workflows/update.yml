@@ -137,7 +137,7 @@ jobs:
           .\wingetcreate.exe update `
             --submit `
             --token $env:WINGET_TOKEN `
-            --urls '${{ steps.release.outputs.url }}' `
+            --urls '${{ steps.release.outputs.url }}|x64' `
             --version '${{ steps.release.outputs.version }}' `
             xHybred.NVPIRevamped
 
