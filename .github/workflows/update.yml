@@ -131,6 +131,7 @@ jobs:
 
       - name: Submit NVPI-R to WinGet
         if: steps.nvpir-check.outputs.skip != 'true'
+        continue-on-error: true
         shell: pwsh
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
@@ -258,6 +259,7 @@ jobs:
 
       - name: Submit NPI to WinGet
         if: steps.nvpi-check.outputs.skip != 'true'
+        continue-on-error: true
         shell: pwsh
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
