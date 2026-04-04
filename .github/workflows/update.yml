@@ -23,8 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Fetch latest release
-        id: release
+      # ── NVPI Revamped ──────────────────────────────────────────────
+
+      - name: Fetch NVPI-R release
+        id: nvpir-release
         shell: pwsh
         run: |
           $response = Invoke-RestMethod `
@@ -40,64 +42,64 @@ jobs:
           Add-Content $env:GITHUB_OUTPUT "version=$version"
           Add-Content $env:GITHUB_OUTPUT "url=$url"
 
-      - name: Check current version
-        id: check
+      - name: Check NVPI-R version
+        id: nvpir-check
         shell: pwsh
         run: |
           $current = if (Test-Path version.txt) { (Get-Content version.txt -Raw).Trim() } else { '' }
-          if ($current -eq '${{ steps.release.outputs.version }}') {
-            Write-Host 'Already up to date'
+          if ($current -eq '${{ steps.nvpir-release.outputs.version }}') {
+            Write-Host 'NVPI-R already up to date'
             Add-Content $env:GITHUB_OUTPUT 'skip=true'
           } else {
-            Write-Host "Updating from $current to ${{ steps.release.outputs.version }}"
+            Write-Host "Updating NVPI-R from $current to ${{ steps.nvpir-release.outputs.version }}"
             Add-Content $env:GITHUB_OUTPUT 'skip=false'
           }
 
-      - name: Download and hash
-        if: steps.check.outputs.skip != 'true'
-        id: hash
+      - name: Download and hash NVPI-R
+        if: steps.nvpir-check.outputs.skip != 'true'
+        id: nvpir-hash
         shell: pwsh
         run: |
           $tmp = Join-Path $env:TEMP 'nvpi-r.zip'
-          Invoke-WebRequest -Uri '${{ steps.release.outputs.url }}' -OutFile $tmp -UseBasicParsing
+          Invoke-WebRequest -Uri '${{ steps.nvpir-release.outputs.url }}' -OutFile $tmp -UseBasicParsing
           $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
           Remove-Item $tmp -Force
 
-      - name: Update Scoop manifest
-        if: steps.check.outputs.skip != 'true'
+      - name: Update NVPI-R Scoop manifest
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
           $m = Get-Content bucket/nvpi-r.json -Raw | ConvertFrom-Json
-          $m.version = '${{ steps.release.outputs.version }}'
-          $m.url = '${{ steps.release.outputs.url }}'
-          $m.hash = '${{ steps.hash.outputs.sha256 }}'
+          $m.version = '${{ steps.nvpir-release.outputs.version }}'
+          $m.url = '${{ steps.nvpir-release.outputs.url }}'
+          $m.hash = '${{ steps.nvpir-hash.outputs.sha256 }}'
           $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json -NoNewline
 
-      - name: Update Chocolatey nuspec
-        if: steps.check.outputs.skip != 'true'
+      - name: Update NVPI-R Chocolatey nuspec
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
           [xml]$nuspec = Get-Content chocolatey/nvpi-r.nuspec
-          $nuspec.package.metadata.version = '${{ steps.release.outputs.version }}'
+          $nuspec.package.metadata.version = '${{ steps.nvpir-release.outputs.version }}'
           $nuspec.Save((Resolve-Path chocolatey/nvpi-r.nuspec).Path)
 
-      - name: Update install script
-        if: steps.check.outputs.skip != 'true'
+      - name: Update NVPI-R install script
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
           $content = Get-Content chocolatey/tools/chocolateyInstall.ps1 -Raw
-          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.release.outputs.url }}'
-          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.hash.outputs.sha256 }}'
+          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.nvpir-release.outputs.url }}'
+          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.nvpir-hash.outputs.sha256 }}'
           Set-Content chocolatey/tools/chocolateyInstall.ps1 $content
 
-      - name: Update WinGet manifests
-        if: steps.check.outputs.skip != 'true'
+      - name: Update NVPI-R WinGet manifests
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
-          $version = '${{ steps.release.outputs.version }}'
-          $url = '${{ steps.release.outputs.url }}'
-          $sha256 = '${{ steps.hash.outputs.sha256 }}'
+          $version = '${{ steps.nvpir-release.outputs.version }}'
+          $url = '${{ steps.nvpir-release.outputs.url }}'
+          $sha256 = '${{ steps.nvpir-hash.outputs.sha256 }}'
           foreach ($file in Get-ChildItem winget/*.yaml) {
             $content = Get-Content $file.FullName -Raw
             $content = $content -replace '(?<=PackageVersion:\s+)\S+', $version
@@ -111,14 +113,14 @@ jobs:
             Set-Content $file.FullName $content -NoNewline
           }
 
-      - name: Pack Chocolatey package
-        if: steps.check.outputs.skip != 'true'
+      - name: Pack NVPI-R Chocolatey package
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
           choco pack chocolatey/nvpi-r.nuspec --out .
 
-      - name: Push to Chocolatey
-        if: steps.check.outputs.skip != 'true'
+      - name: Push NVPI-R to Chocolatey
+        if: steps.nvpir-check.outputs.skip != 'true'
         continue-on-error: true
         shell: pwsh
         env:
@@ -127,8 +129,8 @@ jobs:
           $nupkg = (Get-Item 'nvpi-r.*.nupkg').FullName
           choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
-      - name: Submit to WinGet
-        if: steps.check.outputs.skip != 'true'
+      - name: Submit NVPI-R to WinGet
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
@@ -137,22 +139,160 @@ jobs:
           .\wingetcreate.exe update `
             --submit `
             --token $env:WINGET_TOKEN `
-            --urls '${{ steps.release.outputs.url }}|x64' `
-            --version '${{ steps.release.outputs.version }}' `
+            --urls '${{ steps.nvpir-release.outputs.url }}|x64' `
+            --version '${{ steps.nvpir-release.outputs.version }}' `
             xHybred.NVPIRevamped
 
-      - name: Bump version file
-        if: steps.check.outputs.skip != 'true'
+      - name: Bump NVPI-R version file
+        if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
         run: |
-          Set-Content version.txt '${{ steps.release.outputs.version }}'
+          Set-Content version.txt '${{ steps.nvpir-release.outputs.version }}'
+
+      # ── NVIDIA Profile Inspector (Original) ────────────────────────
+
+      - name: Fetch NPI release
+        id: nvpi-release
+        shell: pwsh
+        run: |
+          $releases = Invoke-RestMethod `
+            -Uri 'https://api.github.com/repos/Orbmu2k/nvidiaProfileInspector/releases?per_page=1' `
+            -Headers @{ Authorization = 'Bearer ${{ secrets.GITHUB_TOKEN }}' }
+          $release = $releases[0]
+          $version = $release.tag_name.TrimStart('v')
+          $asset = $release.assets | Where-Object { $_.name -eq 'nvidiaProfileInspector.zip' } | Select-Object -First 1
+          if (-not $asset) {
+            Write-Error 'nvidiaProfileInspector.zip asset not found in release'
+            exit 1
+          }
+          $url = $asset.browser_download_url
+          Add-Content $env:GITHUB_OUTPUT "version=$version"
+          Add-Content $env:GITHUB_OUTPUT "url=$url"
+
+      - name: Check NPI version
+        id: nvpi-check
+        shell: pwsh
+        run: |
+          $current = if (Test-Path nvpi-version.txt) { (Get-Content nvpi-version.txt -Raw).Trim() } else { '' }
+          if ($current -eq '${{ steps.nvpi-release.outputs.version }}') {
+            Write-Host 'NPI already up to date'
+            Add-Content $env:GITHUB_OUTPUT 'skip=true'
+          } else {
+            Write-Host "Updating NPI from $current to ${{ steps.nvpi-release.outputs.version }}"
+            Add-Content $env:GITHUB_OUTPUT 'skip=false'
+          }
+
+      - name: Download and hash NPI
+        if: steps.nvpi-check.outputs.skip != 'true'
+        id: nvpi-hash
+        shell: pwsh
+        run: |
+          $tmp = Join-Path $env:TEMP 'nvpi.zip'
+          Invoke-WebRequest -Uri '${{ steps.nvpi-release.outputs.url }}' -OutFile $tmp -UseBasicParsing
+          $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
+          Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
+          Remove-Item $tmp -Force
+
+      - name: Update NPI Scoop manifest
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $m = Get-Content bucket/nvpi.json -Raw | ConvertFrom-Json
+          $m.version = '${{ steps.nvpi-release.outputs.version }}'
+          $m.url = '${{ steps.nvpi-release.outputs.url }}'
+          $m.hash = '${{ steps.nvpi-hash.outputs.sha256 }}'
+          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi.json -NoNewline
+
+      - name: Update NPI Chocolatey nuspec
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          [xml]$nuspec = Get-Content chocolatey-nvpi/nvpi.nuspec
+          $nuspec.package.metadata.version = '${{ steps.nvpi-release.outputs.version }}'
+          $nuspec.Save((Resolve-Path chocolatey-nvpi/nvpi.nuspec).Path)
+
+      - name: Update NPI install script
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $content = Get-Content chocolatey-nvpi/tools/chocolateyInstall.ps1 -Raw
+          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.nvpi-release.outputs.url }}'
+          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.nvpi-hash.outputs.sha256 }}'
+          Set-Content chocolatey-nvpi/tools/chocolateyInstall.ps1 $content
+
+      - name: Update NPI WinGet manifests
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $version = '${{ steps.nvpi-release.outputs.version }}'
+          $url = '${{ steps.nvpi-release.outputs.url }}'
+          $sha256 = '${{ steps.nvpi-hash.outputs.sha256 }}'
+          foreach ($file in Get-ChildItem winget-nvpi/*.yaml) {
+            $content = Get-Content $file.FullName -Raw
+            $content = $content -replace '(?<=PackageVersion:\s+)\S+', $version
+            if ($file.Name -like '*installer*') {
+              $content = $content -replace '(?<=InstallerUrl:\s+)\S+', $url
+              $content = $content -replace '(?<=InstallerSha256:\s+)\S+', $sha256.ToUpper()
+            }
+            if ($file.Name -like '*locale*') {
+              $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/v$version"
+            }
+            Set-Content $file.FullName $content -NoNewline
+          }
+
+      - name: Pack NPI Chocolatey package
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          choco pack chocolatey-nvpi/nvpi.nuspec --out .
+
+      - name: Push NPI to Chocolatey
+        if: steps.nvpi-check.outputs.skip != 'true'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+        run: |
+          $nupkg = (Get-Item 'nvpi.*.nupkg').FullName
+          choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
+
+      - name: Submit NPI to WinGet
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if (-not (Test-Path wingetcreate.exe)) {
+            Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing
+          }
+          .\wingetcreate.exe update `
+            --submit `
+            --token $env:WINGET_TOKEN `
+            --urls '${{ steps.nvpi-release.outputs.url }}|x64' `
+            --version '${{ steps.nvpi-release.outputs.version }}' `
+            Orbmu2k.nvidiaProfileInspector
+
+      - name: Bump NPI version file
+        if: steps.nvpi-check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          Set-Content nvpi-version.txt '${{ steps.nvpi-release.outputs.version }}'
+
+      # ── Commit ──────────────────────────────────────────────────────
 
       - name: Commit and push
-        if: steps.check.outputs.skip != 'true'
+        if: steps.nvpir-check.outputs.skip != 'true' || steps.nvpi-check.outputs.skip != 'true'
         shell: pwsh
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add bucket/nvpi-r.json chocolatey/nvpi-r.nuspec chocolatey/tools/chocolateyInstall.ps1 winget/ version.txt
-          git commit -m 'chore: bump to v${{ steps.release.outputs.version }}'
+          git config user.name 'AmirulAndalib'
+          git config user.email 'AmirulAndalib@users.noreply.github.com'
+          git add bucket/ chocolatey/ chocolatey-nvpi/ winget/ winget-nvpi/ version.txt nvpi-version.txt
+          $nvpirUpdated = '${{ steps.nvpir-check.outputs.skip }}' -ne 'true'
+          $nvpiUpdated = '${{ steps.nvpi-check.outputs.skip }}' -ne 'true'
+          $msg = 'chore: bump'
+          if ($nvpirUpdated) { $msg += " nvpi-r to v${{ steps.nvpir-release.outputs.version }}" }
+          if ($nvpirUpdated -and $nvpiUpdated) { $msg += ',' }
+          if ($nvpiUpdated) { $msg += " nvpi to v${{ steps.nvpi-release.outputs.version }}" }
+          $msg += "`n`nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          git commit -m "$msg"
           git push

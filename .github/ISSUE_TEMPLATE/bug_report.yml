@@ -5,7 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        > **Note:** If the bug is in NVPI Revamped itself (not the packaging), please report it upstream at [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues).
+        > **Note:** If the bug is in the app itself (not the packaging), report it upstream:
+        > - NVPI Revamped: [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues)
+        > - NVIDIA Profile Inspector (Original): [Orbmu2k/nvidiaProfileInspector](https://github.com/Orbmu2k/nvidiaProfileInspector/issues)
 
   - type: dropdown
     id: manager
@@ -22,7 +24,7 @@ body:
     id: version
     attributes:
       label: Package Version
-      placeholder: "e.g. 7.0.1.0"
+      placeholder: "e.g. 7.0.1.0 (NVPI-R) or 3.0.1.10 (NPI)"
     validations:
       required: true
 
@@ -40,7 +42,7 @@ body:
       label: Steps to Reproduce
       description: How can we reproduce the issue?
       placeholder: |
-        1. Run `winget install xHybred.NVPIRevamped`
+        1. Run `winget install xHybred.NVPIRevamped` (or `winget install Orbmu2k.nvidiaProfileInspector`)
         2. ...
     validations:
       required: true

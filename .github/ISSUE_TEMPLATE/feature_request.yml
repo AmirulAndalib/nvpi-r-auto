@@ -5,7 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        > **Note:** Feature requests for NVPI Revamped itself should go to [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues).
+        > **Note:** Feature requests for the apps themselves should go upstream:
+        > - NVPI Revamped: [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues)
+        > - NVIDIA Profile Inspector (Original): [Orbmu2k/nvidiaProfileInspector](https://github.com/Orbmu2k/nvidiaProfileInspector/issues)
 
   - type: textarea
     id: description

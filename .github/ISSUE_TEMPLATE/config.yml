@@ -3,3 +3,6 @@ contact_links:
   - name: NVPI Revamped Issues (Upstream)
     url: https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues
     about: Report bugs or request features for NVPI Revamped itself
+  - name: NVIDIA Profile Inspector Issues (Upstream)
+    url: https://github.com/Orbmu2k/nvidiaProfileInspector/issues
+    about: Report bugs or request features for the original NVIDIA Profile Inspector

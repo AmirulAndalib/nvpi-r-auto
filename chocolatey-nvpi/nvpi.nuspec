@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>nvpi</id>
+    <version>3.0.1.10</version>
+    <title>NVIDIA Profile Inspector</title>
+    <authors>Orbmu2k</authors>
+    <owners>AmirulAndalib</owners>
+    <projectUrl>https://github.com/Orbmu2k/nvidiaProfileInspector</projectUrl>
+    <packageSourceUrl>https://github.com/AmirulAndalib/nvpi-r-auto</packageSourceUrl>
+    <projectSourceUrl>https://github.com/Orbmu2k/nvidiaProfileInspector</projectSourceUrl>
+    <docsUrl>https://github.com/Orbmu2k/nvidiaProfileInspector/blob/master/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/Orbmu2k/nvidiaProfileInspector/issues</bugTrackerUrl>
+    <licenseUrl>https://github.com/Orbmu2k/nvidiaProfileInspector/blob/master/LICENSE</licenseUrl>
+    <copyright>Copyright (c) Orbmu2k</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Advanced Nvidia driver profile inspector and editor for managing Nvidia driver profiles on Windows.</description>
+    <summary>Nvidia Profile Inspector by Orbmu2k.</summary>
+    <tags>nvidia gpu driver profile inspector gaming overclock settings</tags>
+    <releaseNotes>https://github.com/Orbmu2k/nvidiaProfileInspector/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

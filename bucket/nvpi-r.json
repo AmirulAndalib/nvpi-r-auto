@@ -30,7 +30,7 @@
     "NVPI Revamped App\\CustomSettingNames.xml",
     "NVPI Revamped App\\Settings.xml"
   ],
-  "notes": "Desktop and Start Menu shortcuts are created automatically. Settings are persisted across updates.",
+  "notes": "Desktop and Start Menu shortcuts are created automatically. Settings are persisted across updates. Package maintained by AmirulAndalib (https://github.com/AmirulAndalib).",
   "checkver": {
     "github": "https://github.com/xHybred/NvidiaProfileInspectorRevamped"
   },

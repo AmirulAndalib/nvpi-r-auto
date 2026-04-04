@@ -6,10 +6,10 @@ This repository contains **packaging automation only** (WinGet, Chocolatey, and 
 
 ## Reporting a Vulnerability
 
-- **Application vulnerabilities** — Report directly to the upstream project:
-  [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues)
-
-- **Packaging vulnerabilities** (e.g., tampered hashes, compromised workflow) — Open a
+- **Application vulnerabilities:** Report directly to the upstream project:
+  - NVPI Revamped: [xHybred/NvidiaProfileInspectorRevamped](https://github.com/xHybred/NvidiaProfileInspectorRevamped/issues)
+  - NVIDIA Profile Inspector (Original): [Orbmu2k/nvidiaProfileInspector](https://github.com/Orbmu2k/nvidiaProfileInspector/issues)
+- **Packaging vulnerabilities** (e.g., tampered hashes, compromised workflow): Open a
   [private security advisory](https://github.com/AmirulAndalib/nvpi-r-auto/security/advisories/new)
   on this repository, or email the maintainer directly.
 
