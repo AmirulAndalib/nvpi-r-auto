@@ -23,3 +23,4 @@ Install-ChocolateyShortcut `
     -ShortcutFilePath $startMenu `
     -TargetPath $exe `
     -WorkingDirectory $installDir
+
