@@ -141,7 +141,7 @@ jobs:
           choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NVPI-R to WinGet
-        if: steps.nvpir-check.outputs.skip != 'true' && steps.nvpir-check.outputs.new-version == 'true'
+        if: steps.nvpir-check.outputs.skip != 'true' && (steps.nvpir-check.outputs.new-version == 'true' || github.event_name == 'workflow_dispatch')
         id: nvpir-winget
         continue-on-error: true
         shell: pwsh
@@ -275,7 +275,7 @@ jobs:
           choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NPI to WinGet
-        if: steps.nvpi-check.outputs.skip != 'true' && steps.nvpi-check.outputs.new-version == 'true'
+        if: steps.nvpi-check.outputs.skip != 'true' && (steps.nvpi-check.outputs.new-version == 'true' || github.event_name == 'workflow_dispatch')
         id: nvpi-winget
         continue-on-error: true
         shell: pwsh
