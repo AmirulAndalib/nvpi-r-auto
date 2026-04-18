@@ -30,3 +30,4 @@ Install-ChocolateyShortcut `
     -TargetPath $exe `
     -WorkingDirectory (Split-Path $exe)
 
+
