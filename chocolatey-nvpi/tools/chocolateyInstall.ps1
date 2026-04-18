@@ -5,8 +5,8 @@ $installDir = Join-Path $env:USERPROFILE 'NVPI'
 $packageArgs = @{
     packageName   = 'nvpi'
     unzipLocation = $installDir
-    url           = 'https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.11/nvidiaProfileInspector.zip'
-    checksum      = '68db1640186dd6fd78b5f7949348808b9a542ee95e2a52810b2eeed026e80236'
+    url           = 'https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.12/nvidiaProfileInspector.zip'
+    checksum      = '494065af4ac3e9ce672c95e51e6b8a5301c208b6fed777ee6bbfe755081ba308'
     checksumType  = 'sha256'
 }
 
@@ -23,6 +23,7 @@ Install-ChocolateyShortcut `
     -ShortcutFilePath $startMenu `
     -TargetPath $exe `
     -WorkingDirectory $installDir
+
 
 
 

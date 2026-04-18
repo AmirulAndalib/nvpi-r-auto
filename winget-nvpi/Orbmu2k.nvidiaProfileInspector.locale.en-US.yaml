@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.12.0.schema.json
 PackageIdentifier: Orbmu2k.nvidiaProfileInspector
-PackageVersion: 3.0.1.11
+PackageVersion: 3.0.1.12
 PackageLocale: en-US
 Publisher: Orbmu2k
 PublisherUrl: https://github.com/Orbmu2k
@@ -22,7 +22,7 @@ Tags:
 - inspector
 - gaming
 - overclock
-ReleaseNotesUrl: https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/v3.0.1.11
+ReleaseNotesUrl: https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/v3.0.1.12
 InstallationNotes: |-
   Run 'nvpi' from any terminal to launch NVIDIA Profile Inspector.
   WinGet portable packages do not create desktop or Start Menu shortcuts.
