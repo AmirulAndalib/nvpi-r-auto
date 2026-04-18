@@ -20,6 +20,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Sync winget-pkgs fork
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          gh api repos/${{ github.repository_owner }}/winget-pkgs/merge-upstream `
+            -X POST -f branch=master
+
       # ── NVPI Revamped ──────────────────────────────────────────────
 
       - name: Fetch NVPI-R release
@@ -45,11 +54,14 @@ jobs:
         run: |
           $current = if (Test-Path version.txt) { (Get-Content version.txt -Raw).Trim() } else { '' }
           $isManual = '${{ github.event_name }}' -eq 'workflow_dispatch'
-          if ($current -eq '${{ steps.nvpir-release.outputs.version }}' -and -not $isManual) {
+          $newVersion = $current -ne '${{ steps.nvpir-release.outputs.version }}'
+          Add-Content $env:GITHUB_OUTPUT "new-version=$($newVersion.ToString().ToLower())"
+          if (-not $newVersion -and -not $isManual) {
             Write-Host 'NVPI-R already up to date'
             Add-Content $env:GITHUB_OUTPUT 'skip=true'
           } else {
-            if ($isManual) { Write-Host 'Manual dispatch - forcing NVPI-R update' }
+            if ($isManual -and -not $newVersion) { Write-Host 'Manual dispatch - refreshing NVPI-R manifests (same version)' }
+            elseif ($isManual) { Write-Host 'Manual dispatch - forcing NVPI-R update' }
             Write-Host "Updating NVPI-R from $current to ${{ steps.nvpir-release.outputs.version }}"
             Add-Content $env:GITHUB_OUTPUT 'skip=false'
           }
@@ -129,7 +141,7 @@ jobs:
           choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NVPI-R to WinGet
-        if: steps.nvpir-check.outputs.skip != 'true'
+        if: steps.nvpir-check.outputs.skip != 'true' && steps.nvpir-check.outputs.new-version == 'true'
         id: nvpir-winget
         continue-on-error: true
         shell: pwsh
@@ -176,11 +188,14 @@ jobs:
         run: |
           $current = if (Test-Path nvpi-version.txt) { (Get-Content nvpi-version.txt -Raw).Trim() } else { '' }
           $isManual = '${{ github.event_name }}' -eq 'workflow_dispatch'
-          if ($current -eq '${{ steps.nvpi-release.outputs.version }}' -and -not $isManual) {
+          $newVersion = $current -ne '${{ steps.nvpi-release.outputs.version }}'
+          Add-Content $env:GITHUB_OUTPUT "new-version=$($newVersion.ToString().ToLower())"
+          if (-not $newVersion -and -not $isManual) {
             Write-Host 'NPI already up to date'
             Add-Content $env:GITHUB_OUTPUT 'skip=true'
           } else {
-            if ($isManual) { Write-Host 'Manual dispatch - forcing NPI update' }
+            if ($isManual -and -not $newVersion) { Write-Host 'Manual dispatch - refreshing NPI manifests (same version)' }
+            elseif ($isManual) { Write-Host 'Manual dispatch - forcing NPI update' }
             Write-Host "Updating NPI from $current to ${{ steps.nvpi-release.outputs.version }}"
             Add-Content $env:GITHUB_OUTPUT 'skip=false'
           }
@@ -260,7 +275,7 @@ jobs:
           choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NPI to WinGet
-        if: steps.nvpi-check.outputs.skip != 'true'
+        if: steps.nvpi-check.outputs.skip != 'true' && steps.nvpi-check.outputs.new-version == 'true'
         id: nvpi-winget
         continue-on-error: true
         shell: pwsh
@@ -297,10 +312,8 @@ jobs:
             Write-Host 'No changes to commit'
             exit 0
           }
-          $nvpirWinget = '${{ steps.nvpir-winget.outcome }}' -eq 'success'
-          $nvpiWinget = '${{ steps.nvpi-winget.outcome }}' -eq 'success'
-          $nvpirUpdated = ('${{ steps.nvpir-check.outputs.skip }}' -ne 'true') -and $nvpirWinget
-          $nvpiUpdated = ('${{ steps.nvpi-check.outputs.skip }}' -ne 'true') -and $nvpiWinget
+          $nvpirUpdated = '${{ steps.nvpir-check.outputs.skip }}' -ne 'true'
+          $nvpiUpdated = '${{ steps.nvpi-check.outputs.skip }}' -ne 'true'
           $msg = 'chore: bump'
           if ($nvpirUpdated) { $msg += " nvpi-r to v${{ steps.nvpir-release.outputs.version }}" }
           if ($nvpirUpdated -and $nvpiUpdated) { $msg += ',' }
