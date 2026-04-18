@@ -47,10 +47,12 @@ jobs:
         shell: pwsh
         run: |
           $current = if (Test-Path version.txt) { (Get-Content version.txt -Raw).Trim() } else { '' }
-          if ($current -eq '${{ steps.nvpir-release.outputs.version }}') {
+          $isManual = '${{ github.event_name }}' -eq 'workflow_dispatch'
+          if ($current -eq '${{ steps.nvpir-release.outputs.version }}' -and -not $isManual) {
             Write-Host 'NVPI-R already up to date'
             Add-Content $env:GITHUB_OUTPUT 'skip=true'
           } else {
+            if ($isManual) { Write-Host 'Manual dispatch - forcing NVPI-R update' }
             Write-Host "Updating NVPI-R from $current to ${{ steps.nvpir-release.outputs.version }}"
             Add-Content $env:GITHUB_OUTPUT 'skip=false'
           }
@@ -131,6 +133,7 @@ jobs:
 
       - name: Submit NVPI-R to WinGet
         if: steps.nvpir-check.outputs.skip != 'true'
+        id: nvpir-winget
         continue-on-error: true
         shell: pwsh
         env:
@@ -145,7 +148,7 @@ jobs:
             xHybred.NVPIRevamped
 
       - name: Bump NVPI-R version file
-        if: steps.nvpir-check.outputs.skip != 'true'
+        if: steps.nvpir-check.outputs.skip != 'true' && steps.nvpir-winget.outcome == 'success'
         shell: pwsh
         run: |
           Set-Content version.txt '${{ steps.nvpir-release.outputs.version }}'
@@ -175,10 +178,12 @@ jobs:
         shell: pwsh
         run: |
           $current = if (Test-Path nvpi-version.txt) { (Get-Content nvpi-version.txt -Raw).Trim() } else { '' }
-          if ($current -eq '${{ steps.nvpi-release.outputs.version }}') {
+          $isManual = '${{ github.event_name }}' -eq 'workflow_dispatch'
+          if ($current -eq '${{ steps.nvpi-release.outputs.version }}' -and -not $isManual) {
             Write-Host 'NPI already up to date'
             Add-Content $env:GITHUB_OUTPUT 'skip=true'
           } else {
+            if ($isManual) { Write-Host 'Manual dispatch - forcing NPI update' }
             Write-Host "Updating NPI from $current to ${{ steps.nvpi-release.outputs.version }}"
             Add-Content $env:GITHUB_OUTPUT 'skip=false'
           }
@@ -259,6 +264,7 @@ jobs:
 
       - name: Submit NPI to WinGet
         if: steps.nvpi-check.outputs.skip != 'true'
+        id: nvpi-winget
         continue-on-error: true
         shell: pwsh
         env:
@@ -275,7 +281,7 @@ jobs:
             Orbmu2k.nvidiaProfileInspector
 
       - name: Bump NPI version file
-        if: steps.nvpi-check.outputs.skip != 'true'
+        if: steps.nvpi-check.outputs.skip != 'true' && steps.nvpi-winget.outcome == 'success'
         shell: pwsh
         run: |
           Set-Content nvpi-version.txt '${{ steps.nvpi-release.outputs.version }}'
@@ -289,12 +295,20 @@ jobs:
           git config user.name 'AmirulAndalib'
           git config user.email 'AmirulAndalib@users.noreply.github.com'
           git add bucket/ chocolatey/ chocolatey-nvpi/ winget/ winget-nvpi/ version.txt nvpi-version.txt
-          $nvpirUpdated = '${{ steps.nvpir-check.outputs.skip }}' -ne 'true'
-          $nvpiUpdated = '${{ steps.nvpi-check.outputs.skip }}' -ne 'true'
+          $status = git status --porcelain
+          if (-not $status) {
+            Write-Host 'No changes to commit'
+            exit 0
+          }
+          $nvpirWinget = '${{ steps.nvpir-winget.outcome }}' -eq 'success'
+          $nvpiWinget = '${{ steps.nvpi-winget.outcome }}' -eq 'success'
+          $nvpirUpdated = ('${{ steps.nvpir-check.outputs.skip }}' -ne 'true') -and $nvpirWinget
+          $nvpiUpdated = ('${{ steps.nvpi-check.outputs.skip }}' -ne 'true') -and $nvpiWinget
           $msg = 'chore: bump'
           if ($nvpirUpdated) { $msg += " nvpi-r to v${{ steps.nvpir-release.outputs.version }}" }
           if ($nvpirUpdated -and $nvpiUpdated) { $msg += ',' }
           if ($nvpiUpdated) { $msg += " nvpi to v${{ steps.nvpi-release.outputs.version }}" }
+          if (-not $nvpirUpdated -and -not $nvpiUpdated) { $msg = 'chore: update package manifests' }
           $msg += "`n`nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
           git commit -m "$msg"
           git push
