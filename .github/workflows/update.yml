@@ -39,9 +39,12 @@ jobs:
             -Uri 'https://api.github.com/repos/xHybred/NvidiaProfileInspectorRevamped/releases/latest' `
             -Headers @{ Authorization = 'Bearer ${{ secrets.GITHUB_TOKEN }}' }
           $version = $response.tag_name.TrimStart('v')
-          $asset = $response.assets | Where-Object { $_.name -eq 'NVPI-R.zip' } | Select-Object -First 1
+          $asset = $response.assets | Where-Object { $_.name -eq 'NVPIRevamped.zip' } | Select-Object -First 1
           if (-not $asset) {
-            Write-Error 'NVPI-R.zip asset not found in latest release'
+            $asset = $response.assets | Where-Object { $_.name -eq 'NVPI-R.zip' } | Select-Object -First 1
+          }
+          if (-not $asset) {
+            Write-Error 'Neither NVPIRevamped.zip nor NVPI-R.zip asset found in latest release'
             exit 1
           }
           $url = $asset.browser_download_url
