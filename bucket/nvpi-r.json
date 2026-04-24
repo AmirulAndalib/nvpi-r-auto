@@ -35,6 +35,6 @@
     "github": "https://github.com/xHybred/NvidiaProfileInspectorRevamped"
   },
   "autoupdate": {
-    "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v$version/NVPI-R.zip"
+    "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v$version/NVPIRevamped.zip"
   }
 }
