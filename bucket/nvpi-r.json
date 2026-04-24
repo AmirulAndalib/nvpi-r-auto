@@ -5,10 +5,10 @@
   "license": "MIT",
   "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.2.0/NVPIRevamped.zip",
   "hash": "e86107a731d880df74c5682253d3db6fc760e4857237b0a6834e029f4f5bc02c",
-  "bin": "NVPI Revamped App\\NVPI-R.exe",
+  "bin": "NVPI-R.exe",
   "shortcuts": [
     [
-      "NVPI Revamped App\\NVPI-R.exe",
+      "NVPI-R.exe",
       "NVPI Revamped"
     ]
   ],
@@ -17,8 +17,8 @@
     "$desktop = [Environment]::GetFolderPath('Desktop')",
     "$wsh = New-Object -ComObject WScript.Shell",
     "$lnk = $wsh.CreateShortcut(\"$desktop\\NVPI Revamped.lnk\")",
-    "$lnk.TargetPath = \"$currentDir\\NVPI Revamped App\\NVPI-R.exe\"",
-    "$lnk.WorkingDirectory = \"$currentDir\\NVPI Revamped App\"",
+    "$lnk.TargetPath = \"$currentDir\\NVPI-R.exe\"",
+    "$lnk.WorkingDirectory = \"$currentDir\"",
     "$lnk.Save()",
     "Get-ChildItem (Split-Path $dir) -Directory | Where-Object { $_.Name -ne 'current' -and $_.Name -ne $version } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
   ],
@@ -27,8 +27,9 @@
     "Remove-Item \"$desktop\\NVPI Revamped.lnk\" -Force -ErrorAction SilentlyContinue"
   ],
   "persist": [
-    "NVPI Revamped App\\CustomSettingNames.xml",
-    "NVPI Revamped App\\Settings.xml"
+    "CustomSettingNames.xml",
+    "Settings.xml",
+    "Reference.xml"
   ],
   "notes": "Desktop and Start Menu shortcuts are created automatically. Settings are persisted across updates. Package maintained by AmirulAndalib (https://github.com/AmirulAndalib).",
   "checkver": {

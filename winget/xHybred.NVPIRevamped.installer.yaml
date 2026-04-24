@@ -16,12 +16,12 @@ Installers:
   InstallerSha256: E86107A731D880DF74C5682253D3DB6FC760E4857237B0A6834E029F4F5BC02C
   NestedInstallerType: portable
   NestedInstallerFiles:
-    - RelativeFilePath: NVPI Revamped App\NVPI-R.exe
+    - RelativeFilePath: NVPI-R.exe
       PortableCommandAlias: nvpi-r
   InstallationMetadata:
     DefaultInstallLocation: '%LOCALAPPDATA%\Microsoft\WinGet\Packages\xHybred.NVPIRevamped_Microsoft.Winget.Source_8wekyb3d8bbwe'
     Files:
-      - RelativeFilePath: NVPI Revamped App\NVPI-R.exe
+      - RelativeFilePath: NVPI-R.exe
         FileType: launch
 ManifestType: installer
 ManifestVersion: 1.12.0

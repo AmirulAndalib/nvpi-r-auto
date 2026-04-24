@@ -18,7 +18,7 @@ if (Test-Path $nested) {
     Remove-Item $nested -Recurse -Force
 }
 
-$exe = Join-Path $installDir 'NVPI Revamped App\NVPI-R.exe'
+$exe = Join-Path $installDir 'NVPI-R.exe'
 Install-ChocolateyShortcut `
     -ShortcutFilePath (Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk') `
     -TargetPath $exe `
