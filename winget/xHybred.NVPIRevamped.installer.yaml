@@ -23,6 +23,7 @@ Installers:
     Files:
       - RelativeFilePath: NVPI-R.exe
         FileType: launch
+ReleaseDate: 2026-04-23
 ManifestType: installer
 ManifestVersion: 1.12.0
 

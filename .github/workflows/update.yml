@@ -15,7 +15,7 @@ concurrency:
 jobs:
   update:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v6
@@ -34,11 +34,26 @@ jobs:
       - name: Fetch NVPI-R release
         id: nvpir-release
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $headers = @{
+            Authorization          = "Bearer $env:GH_TOKEN"
+            Accept                 = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+            'User-Agent'           = 'nvpi-r-auto-workflow'
+          }
+          # NVPI-R only ships stable releases — /releases/latest is correct here.
           $response = Invoke-RestMethod `
             -Uri 'https://api.github.com/repos/xHybred/NvidiaProfileInspectorRevamped/releases/latest' `
-            -Headers @{ Authorization = 'Bearer ${{ secrets.GITHUB_TOKEN }}' }
+            -Headers $headers -MaximumRetryCount 3 -RetryIntervalSec 5
+          if (-not $response -or -not $response.tag_name) {
+            Write-Error 'Failed to fetch NVPI-R latest release or tag_name is null'
+            exit 1
+          }
           $version = $response.tag_name.TrimStart('v')
+          $releaseDate = ([datetime]$response.published_at).ToString('yyyy-MM-dd')
           $asset = $response.assets | Where-Object { $_.name -eq 'NVPIRevamped.zip' } | Select-Object -First 1
           if (-not $asset) {
             $asset = $response.assets | Where-Object { $_.name -eq 'NVPI-R.zip' } | Select-Object -First 1
@@ -49,7 +64,10 @@ jobs:
           }
           $url = $asset.browser_download_url
           Add-Content $env:GITHUB_OUTPUT "version=$version"
+          Add-Content $env:GITHUB_OUTPUT "tag=$($response.tag_name)"
           Add-Content $env:GITHUB_OUTPUT "url=$url"
+          Add-Content $env:GITHUB_OUTPUT "releasedate=$releaseDate"
+          Write-Host "NVPI-R: tag=$($response.tag_name) version=$version date=$releaseDate"
 
       - name: Check NVPI-R version
         id: nvpir-check
@@ -74,8 +92,9 @@ jobs:
         id: nvpir-hash
         shell: pwsh
         run: |
-          $tmp = Join-Path $env:TEMP 'nvpi-r.zip'
-          Invoke-WebRequest -Uri '${{ steps.nvpir-release.outputs.url }}' -OutFile $tmp -UseBasicParsing
+          $ErrorActionPreference = 'Stop'
+          $tmp = Join-Path $env:RUNNER_TEMP 'nvpi-r.zip'
+          Invoke-WebRequest -Uri '${{ steps.nvpir-release.outputs.url }}' -OutFile $tmp -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
           Remove-Item $tmp -Force
@@ -88,7 +107,7 @@ jobs:
           $m.version = '${{ steps.nvpir-release.outputs.version }}'
           $m.url = '${{ steps.nvpir-release.outputs.url }}'
           $m.hash = '${{ steps.nvpir-hash.outputs.sha256 }}'
-          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json -NoNewline
+          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json -NoNewline -Encoding utf8
 
       - name: Update NVPI-R Chocolatey nuspec
         if: steps.nvpir-check.outputs.skip != 'true'
@@ -112,17 +131,20 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ steps.nvpir-release.outputs.version }}'
+          $tag = '${{ steps.nvpir-release.outputs.tag }}'
           $url = '${{ steps.nvpir-release.outputs.url }}'
           $sha256 = '${{ steps.nvpir-hash.outputs.sha256 }}'
+          $releaseDate = '${{ steps.nvpir-release.outputs.releasedate }}'
           foreach ($file in Get-ChildItem winget/*.yaml) {
             $content = Get-Content $file.FullName -Raw
             $content = $content -replace '(?<=PackageVersion:\s+)\S+', $version
             if ($file.Name -like '*installer*') {
               $content = $content -replace '(?<=InstallerUrl:\s+)\S+', $url
               $content = $content -replace '(?<=InstallerSha256:\s+)\S+', $sha256.ToUpper()
+              $content = $content -replace '(?<=ReleaseDate:\s+)\S+', $releaseDate
             }
             if ($file.Name -like '*locale*') {
-              $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/v$version"
+              $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/$tag"
             }
             Set-Content $file.FullName $content -NoNewline
           }
@@ -151,10 +173,40 @@ jobs:
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         run: |
-          Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing
-          .\wingetcreate.exe submit `
-            --token $env:WINGET_TOKEN `
-            winget
+          $version = '${{ steps.nvpir-release.outputs.version }}'
+          $headers = @{
+            Authorization          = "Bearer $env:WINGET_TOKEN"
+            Accept                 = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+            'User-Agent'           = 'nvpi-r-auto-workflow'
+          }
+          # Guard 1: version folder already merged into winget-pkgs
+          try {
+            $null = Invoke-RestMethod `
+              -Uri "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/x/xHybred/NVPIRevamped/$version" `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+            Write-Host "NVPI-R v$version already merged in microsoft/winget-pkgs — skipping submission"
+            exit 0
+          } catch {
+            $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { -1 }
+            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code — proceeding anyway" }
+          }
+          # Guard 2: open PR already targeting this version
+          try {
+            $q = [Uri]::EscapeDataString("repo:microsoft/winget-pkgs is:pr is:open xHybred.NVPIRevamped $version")
+            $search = Invoke-RestMethod -Uri "https://api.github.com/search/issues?q=$q" `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+            if ($search.total_count -gt 0) {
+              Write-Host "NVPI-R v$version already has open PR #$($search.items[0].number) — skipping submission"
+              exit 0
+            }
+          } catch {
+            Write-Warning "PR search check failed: $($_.Exception.Message) — proceeding anyway"
+          }
+          if (-not (Test-Path wingetcreate.exe)) {
+            Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
+          }
+          .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget
 
       - name: Bump NVPI-R version file
         if: steps.nvpir-check.outputs.skip != 'true' && steps.nvpir-winget.outcome == 'success'
@@ -167,20 +219,41 @@ jobs:
       - name: Fetch NPI release
         id: nvpi-release
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $headers = @{
+            Authorization          = "Bearer $env:GH_TOKEN"
+            Accept                 = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+            'User-Agent'           = 'nvpi-r-auto-workflow'
+          }
+          # Orbmu2k publishes the v3.x line as pre-release. /releases/latest excludes pre-releases,
+          # so we fetch all recent releases and pick the most recent non-draft (any prerelease state).
           $releases = Invoke-RestMethod `
-            -Uri 'https://api.github.com/repos/Orbmu2k/nvidiaProfileInspector/releases?per_page=1' `
-            -Headers @{ Authorization = 'Bearer ${{ secrets.GITHUB_TOKEN }}' }
-          $release = $releases[0]
-          $version = $release.tag_name.TrimStart('v')
-          $asset = $release.assets | Where-Object { $_.name -eq 'nvidiaProfileInspector.zip' } | Select-Object -First 1
-          if (-not $asset) {
-            Write-Error 'nvidiaProfileInspector.zip asset not found in release'
+            -Uri 'https://api.github.com/repos/Orbmu2k/nvidiaProfileInspector/releases?per_page=10' `
+            -Headers $headers -MaximumRetryCount 3 -RetryIntervalSec 5
+          $candidates = @($releases | Where-Object { -not $_.draft })
+          $release = $null
+          foreach ($r in $candidates) {
+            $hasAsset = ($r.assets | Where-Object { $_.name -eq 'nvidiaProfileInspector.zip' } | Select-Object -First 1)
+            if ($hasAsset) { $release = $r; break }
+          }
+          if (-not $release -or -not $release.tag_name) {
+            Write-Error 'No NPI release with nvidiaProfileInspector.zip asset found'
             exit 1
           }
+          $version = $release.tag_name.TrimStart('v')
+          $releaseDate = ([datetime]$release.published_at).ToString('yyyy-MM-dd')
+          $asset = $release.assets | Where-Object { $_.name -eq 'nvidiaProfileInspector.zip' } | Select-Object -First 1
           $url = $asset.browser_download_url
           Add-Content $env:GITHUB_OUTPUT "version=$version"
+          Add-Content $env:GITHUB_OUTPUT "tag=$($release.tag_name)"
           Add-Content $env:GITHUB_OUTPUT "url=$url"
+          Add-Content $env:GITHUB_OUTPUT "releasedate=$releaseDate"
+          Add-Content $env:GITHUB_OUTPUT "prerelease=$($release.prerelease.ToString().ToLower())"
+          Write-Host "NPI: tag=$($release.tag_name) version=$version date=$releaseDate prerelease=$($release.prerelease)"
 
       - name: Check NPI version
         id: nvpi-check
@@ -205,8 +278,9 @@ jobs:
         id: nvpi-hash
         shell: pwsh
         run: |
-          $tmp = Join-Path $env:TEMP 'nvpi.zip'
-          Invoke-WebRequest -Uri '${{ steps.nvpi-release.outputs.url }}' -OutFile $tmp -UseBasicParsing
+          $ErrorActionPreference = 'Stop'
+          $tmp = Join-Path $env:RUNNER_TEMP 'nvpi.zip'
+          Invoke-WebRequest -Uri '${{ steps.nvpi-release.outputs.url }}' -OutFile $tmp -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
           Remove-Item $tmp -Force
@@ -219,7 +293,7 @@ jobs:
           $m.version = '${{ steps.nvpi-release.outputs.version }}'
           $m.url = '${{ steps.nvpi-release.outputs.url }}'
           $m.hash = '${{ steps.nvpi-hash.outputs.sha256 }}'
-          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi.json -NoNewline
+          $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi.json -NoNewline -Encoding utf8
 
       - name: Update NPI Chocolatey nuspec
         if: steps.nvpi-check.outputs.skip != 'true'
@@ -243,17 +317,20 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ steps.nvpi-release.outputs.version }}'
+          $tag = '${{ steps.nvpi-release.outputs.tag }}'
           $url = '${{ steps.nvpi-release.outputs.url }}'
           $sha256 = '${{ steps.nvpi-hash.outputs.sha256 }}'
+          $releaseDate = '${{ steps.nvpi-release.outputs.releasedate }}'
           foreach ($file in Get-ChildItem winget-nvpi/*.yaml) {
             $content = Get-Content $file.FullName -Raw
             $content = $content -replace '(?<=PackageVersion:\s+)\S+', $version
             if ($file.Name -like '*installer*') {
               $content = $content -replace '(?<=InstallerUrl:\s+)\S+', $url
               $content = $content -replace '(?<=InstallerSha256:\s+)\S+', $sha256.ToUpper()
+              $content = $content -replace '(?<=ReleaseDate:\s+)\S+', $releaseDate
             }
             if ($file.Name -like '*locale*') {
-              $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/v$version"
+              $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/$tag"
             }
             Set-Content $file.FullName $content -NoNewline
           }
@@ -282,15 +359,40 @@ jobs:
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         run: |
-          if (-not (Test-Path wingetcreate.exe)) {
-            Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing
+          $version = '${{ steps.nvpi-release.outputs.version }}'
+          $headers = @{
+            Authorization          = "Bearer $env:WINGET_TOKEN"
+            Accept                 = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+            'User-Agent'           = 'nvpi-r-auto-workflow'
           }
-          .\wingetcreate.exe update `
-            --submit `
-            --token $env:WINGET_TOKEN `
-            --urls '${{ steps.nvpi-release.outputs.url }}|x64' `
-            --version '${{ steps.nvpi-release.outputs.version }}' `
-            Orbmu2k.nvidiaProfileInspector
+          # Guard 1: version folder already merged into winget-pkgs
+          try {
+            $null = Invoke-RestMethod `
+              -Uri "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/o/Orbmu2k/nvidiaProfileInspector/$version" `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+            Write-Host "NPI v$version already merged in microsoft/winget-pkgs — skipping submission"
+            exit 0
+          } catch {
+            $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { -1 }
+            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code — proceeding anyway" }
+          }
+          # Guard 2: open PR already targeting this version
+          try {
+            $q = [Uri]::EscapeDataString("repo:microsoft/winget-pkgs is:pr is:open Orbmu2k.nvidiaProfileInspector $version")
+            $search = Invoke-RestMethod -Uri "https://api.github.com/search/issues?q=$q" `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+            if ($search.total_count -gt 0) {
+              Write-Host "NPI v$version already has open PR #$($search.items[0].number) — skipping submission"
+              exit 0
+            }
+          } catch {
+            Write-Warning "PR search check failed: $($_.Exception.Message) — proceeding anyway"
+          }
+          if (-not (Test-Path wingetcreate.exe)) {
+            Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
+          }
+          .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget-nvpi
 
       - name: Bump NPI version file
         if: steps.nvpi-check.outputs.skip != 'true' && steps.nvpi-winget.outcome == 'success'
