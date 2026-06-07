@@ -97,6 +97,14 @@ jobs:
           Invoke-WebRequest -Uri '${{ steps.nvpir-release.outputs.url }}' -OutFile $tmp -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           $sha256 = (Get-FileHash $tmp -Algorithm SHA256).Hash.ToLower()
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $z = [System.IO.Compression.ZipFile]::OpenRead($tmp)
+          $exeEntry = $z.Entries | Where-Object { $_.FullName -like '*.exe' } | Select-Object -First 1
+          $z.Dispose()
+          if (-not $exeEntry) { Write-Error 'No .exe found in NVPI-R ZIP'; exit 1 }
+          $exePath = $exeEntry.FullName
+          Add-Content $env:GITHUB_OUTPUT "exepath=$exePath"
+          Write-Host "Exe path in ZIP: $exePath"
           Remove-Item $tmp -Force
 
       - name: Update NVPI-R Scoop manifest
@@ -137,6 +145,7 @@ jobs:
           $url = '${{ steps.nvpir-release.outputs.url }}'
           $sha256 = '${{ steps.nvpir-hash.outputs.sha256 }}'
           $releaseDate = '${{ steps.nvpir-release.outputs.releasedate }}'
+          $exePath = '${{ steps.nvpir-hash.outputs.exepath }}'
           foreach ($file in Get-ChildItem winget/*.yaml) {
             $content = Get-Content $file.FullName -Raw
             $content = $content -replace '(?<=PackageVersion:\s+)\S+', $version
@@ -144,6 +153,7 @@ jobs:
               $content = $content -replace '(?<=InstallerUrl:\s+)\S+', $url
               $content = $content -replace '(?<=InstallerSha256:\s+)\S+', $sha256.ToUpper()
               $content = $content -replace '(?<=ReleaseDate:\s+)\S+', $releaseDate
+              $content = $content -replace '(?<=RelativeFilePath:\s+).+', $exePath
             }
             if ($file.Name -like '*locale*') {
               $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/$tag"
