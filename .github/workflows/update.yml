@@ -115,6 +115,15 @@ jobs:
           $m.version = '${{ steps.nvpir-release.outputs.version }}'
           $m.url = '${{ steps.nvpir-release.outputs.url }}'
           $m.hash = '${{ steps.nvpir-hash.outputs.sha256 }}'
+          $exePath = '${{ steps.nvpir-hash.outputs.exepath }}'
+          $m.bin = $exePath
+          $m.shortcuts[0][0] = $exePath
+          $exePathBackslash = $exePath -replace '/', '\'
+          $m.post_install = @($m.post_install | ForEach-Object {
+            if ($_ -like '*TargetPath*') {
+              $_ -replace '(?<=\$currentDir\\).+(?=")', $exePathBackslash
+            } else { $_ }
+          })
           $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json -NoNewline -Encoding utf8
 
       - name: Update NVPI-R Chocolatey nuspec

@@ -5,10 +5,10 @@
   "license": "MIT",
   "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.1.0.0/NVPI-R.zip",
   "hash": "42dc611298520a8bdedc209461b35d7baba7fa5829af18eaf6a96f468d966a9c",
-  "bin": "NVPI-R.exe",
+  "bin": "NVPI Revamped App/NVPI-R.exe",
   "shortcuts": [
     [
-      "NVPI-R.exe",
+      "NVPI Revamped App/NVPI-R.exe",
       "NVPI Revamped"
     ]
   ],
@@ -17,7 +17,7 @@
     "$desktop = [Environment]::GetFolderPath('Desktop')",
     "$wsh = New-Object -ComObject WScript.Shell",
     "$lnk = $wsh.CreateShortcut(\"$desktop\\NVPI Revamped.lnk\")",
-    "$lnk.TargetPath = \"$currentDir\\NVPI-R.exe\"",
+    "$lnk.TargetPath = \"$currentDir\\NVPI Revamped App\\NVPI-R.exe\"",
     "$lnk.WorkingDirectory = \"$currentDir\"",
     "$lnk.Save()",
     "Get-ChildItem (Split-Path $dir) -Directory | Where-Object { $_.Name -ne 'current' -and $_.Name -ne $version } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
@@ -36,6 +36,6 @@
     "github": "https://github.com/xHybred/NvidiaProfileInspectorRevamped"
   },
   "autoupdate": {
-    "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v$version/NVPIRevamped.zip"
+    "url": "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v$version/NVPI-R.zip"
   }
 }
