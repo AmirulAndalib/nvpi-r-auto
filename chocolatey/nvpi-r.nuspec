@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>nvpi-r</id>
-    <version>7.0.2.0</version>
+    <version>7.1.0.0</version>
     <title>NVPI Revamped</title>
     <authors>xHybred</authors>
     <owners>AmirulAndalib</owners>
@@ -17,7 +17,7 @@
     <description>Revamped fork of Nvidia Profile Inspector with enhancements, UI improvements, and additional features for managing Nvidia driver profiles on Windows.</description>
     <summary>Revamped Nvidia Profile Inspector with enhancements and fixes.</summary>
     <tags>nvidia gpu driver profile inspector gaming overclock settings</tags>
-    <releaseNotes>https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/v7.0.2.0</releaseNotes>
+    <releaseNotes>https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/v7.1.0.0</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

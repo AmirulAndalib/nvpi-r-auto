@@ -5,8 +5,8 @@ $installDir = Join-Path $env:USERPROFILE 'NVPI-R'
 $packageArgs = @{
     packageName   = 'nvpi-r'
     unzipLocation = $installDir
-    url           = 'https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.0.2.0/NVPIRevamped.zip'
-    checksum      = 'e86107a731d880df74c5682253d3db6fc760e4857237b0a6834e029f4f5bc02c'
+    url           = 'https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/v7.1.0.0/NVPI-R.zip'
+    checksum      = '42dc611298520a8bdedc209461b35d7baba7fa5829af18eaf6a96f468d966a9c'
     checksumType  = 'sha256'
 }
 
