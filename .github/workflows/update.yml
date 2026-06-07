@@ -99,9 +99,9 @@ jobs:
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $z = [System.IO.Compression.ZipFile]::OpenRead($tmp)
-          $exeEntry = $z.Entries | Where-Object { $_.FullName -like '*.exe' } | Select-Object -First 1
+          $exeEntry = $z.Entries | Where-Object { $_.Name -eq 'NVPI-R.exe' } | Select-Object -First 1
           $z.Dispose()
-          if (-not $exeEntry) { Write-Error 'No .exe found in NVPI-R ZIP'; exit 1 }
+          if (-not $exeEntry) { Write-Error 'NVPI-R.exe not found in ZIP; upstream may have renamed the exe'; exit 1 }
           $exePath = $exeEntry.FullName
           Add-Content $env:GITHUB_OUTPUT "exepath=$exePath"
           Write-Host "Exe path in ZIP: $exePath"
