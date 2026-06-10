@@ -12,13 +12,8 @@ $packageArgs = @{
 
 Install-ChocolateyZipPackage @packageArgs
 
-$nested = Join-Path $installDir 'NVPI-R'
-if (Test-Path $nested) {
-    Get-ChildItem $nested | Move-Item -Destination $installDir -Force
-    Remove-Item $nested -Recurse -Force
-}
-
-$exe = Join-Path $installDir 'NVPI-R.exe'
+$exe = Get-ChildItem $installDir -Recurse -Filter 'NVPI-R.exe' | Select-Object -First 1 -ExpandProperty FullName
+if (-not $exe) { throw 'NVPI-R.exe not found after extraction' }
 Install-ChocolateyShortcut `
     -ShortcutFilePath (Join-Path ([Environment]::GetFolderPath('Desktop')) 'NVPI Revamped.lnk') `
     -TargetPath $exe `
