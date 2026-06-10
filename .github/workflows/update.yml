@@ -162,7 +162,7 @@ jobs:
               $content = $content -replace '(?<=InstallerUrl:\s+)\S+', $url
               $content = $content -replace '(?<=InstallerSha256:\s+)\S+', $sha256.ToUpper()
               $content = $content -replace '(?<=ReleaseDate:\s+)\S+', $releaseDate
-              $content = $content -replace '(?<=RelativeFilePath:\s+).+', $exePath
+              $content = $content -replace '(?<=RelativeFilePath:\s+).+', ($exePath -replace '/', '\')
             }
             if ($file.Name -like '*locale*') {
               $content = $content -replace '(?<=ReleaseNotesUrl:\s+)\S+', "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/$tag"
