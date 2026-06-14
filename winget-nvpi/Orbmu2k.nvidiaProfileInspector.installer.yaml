@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.12.0.schema.json
 PackageIdentifier: Orbmu2k.nvidiaProfileInspector
-PackageVersion: 3.0.1.13
+PackageVersion: 3.0.1.14
 Platform:
 - Windows.Desktop
 MinimumOSVersion: 10.0.0.0
@@ -21,8 +21,8 @@ InstallationMetadata:
     FileType: launch
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.13/nvidiaProfileInspector.zip
-  InstallerSha256: 6624845BD387C3B9525C446C254822982279901AC31ECE0C7234CD5E971BBE87
-ReleaseDate: 2026-05-27
+  InstallerUrl: https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.14/nvidiaProfileInspector.zip
+  InstallerSha256: A67628108974F0890EE258C6AD767C7941DFADFE5F363E3D7CEC5FDE264E673D
+ReleaseDate: 2026-06-14
 ManifestType: installer
 ManifestVersion: 1.12.0

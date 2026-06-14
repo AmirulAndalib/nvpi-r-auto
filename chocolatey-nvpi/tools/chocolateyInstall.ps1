@@ -5,8 +5,8 @@ $installDir = Join-Path $env:USERPROFILE 'NVPI'
 $packageArgs = @{
     packageName   = 'nvpi'
     unzipLocation = $installDir
-    url           = 'https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.13/nvidiaProfileInspector.zip'
-    checksum      = '6624845bd387c3b9525c446c254822982279901ac31ece0c7234cd5e971bbe87'
+    url           = 'https://github.com/Orbmu2k/nvidiaProfileInspector/releases/download/v3.0.1.14/nvidiaProfileInspector.zip'
+    checksum      = 'a67628108974f0890ee258c6ad767c7941dfadfe5f363e3d7cec5fde264e673d'
     checksumType  = 'sha256'
 }
 
