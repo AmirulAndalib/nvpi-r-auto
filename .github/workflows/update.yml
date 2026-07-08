@@ -126,25 +126,6 @@ jobs:
           })
           $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi-r.json -NoNewline -Encoding utf8
 
-      - name: Update NVPI-R Chocolatey nuspec
-        if: steps.nvpir-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          [xml]$nuspec = Get-Content chocolatey/nvpi-r.nuspec
-          $nuspec.package.metadata.version = '${{ steps.nvpir-release.outputs.version }}'
-          $nuspec.package.metadata.releaseNotes = "https://github.com/xHybred/NvidiaProfileInspectorRevamped/releases/tag/${{ steps.nvpir-release.outputs.tag }}"
-          $nuspec.Save((Resolve-Path chocolatey/nvpi-r.nuspec).Path)
-
-      - name: Update NVPI-R install script
-        if: steps.nvpir-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          $content = Get-Content chocolatey/tools/chocolateyInstall.ps1 -Raw
-          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.nvpir-release.outputs.url }}'
-          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.nvpir-hash.outputs.sha256 }}'
-          $content = $content.TrimEnd()
-          Set-Content chocolatey/tools/chocolateyInstall.ps1 $content -NoNewline
-
       - name: Update NVPI-R WinGet manifests
         if: steps.nvpir-check.outputs.skip != 'true'
         shell: pwsh
@@ -169,22 +150,6 @@ jobs:
             }
             Set-Content $file.FullName $content -NoNewline
           }
-
-      - name: Pack NVPI-R Chocolatey package
-        if: steps.nvpir-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          choco pack chocolatey/nvpi-r.nuspec --out .
-
-      - name: Push NVPI-R to Chocolatey
-        if: steps.nvpir-check.outputs.skip != 'true'
-        continue-on-error: true
-        shell: pwsh
-        env:
-          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
-        run: |
-          $nupkg = (Get-Item 'nvpi-r.*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
-          choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NVPI-R to WinGet
         if: steps.nvpir-check.outputs.skip != 'true' && (steps.nvpir-check.outputs.new-version == 'true' || github.event_name == 'workflow_dispatch')
@@ -332,25 +297,6 @@ jobs:
           $m.hash = '${{ steps.nvpi-hash.outputs.sha256 }}'
           $m | ConvertTo-Json -Depth 10 | Set-Content bucket/nvpi.json -NoNewline -Encoding utf8
 
-      - name: Update NPI Chocolatey nuspec
-        if: steps.nvpi-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          [xml]$nuspec = Get-Content chocolatey-nvpi/nvpi.nuspec
-          $nuspec.package.metadata.version = '${{ steps.nvpi-release.outputs.version }}'
-          $nuspec.package.metadata.releaseNotes = "https://github.com/Orbmu2k/nvidiaProfileInspector/releases/tag/${{ steps.nvpi-release.outputs.tag }}"
-          $nuspec.Save((Resolve-Path chocolatey-nvpi/nvpi.nuspec).Path)
-
-      - name: Update NPI install script
-        if: steps.nvpi-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          $content = Get-Content chocolatey-nvpi/tools/chocolateyInstall.ps1 -Raw
-          $content = $content -replace "(?<=url\s*=\s*')[^']*(?=')", '${{ steps.nvpi-release.outputs.url }}'
-          $content = $content -replace "(?<=checksum\s*=\s*')[^']*(?=')", '${{ steps.nvpi-hash.outputs.sha256 }}'
-          $content = $content.TrimEnd()
-          Set-Content chocolatey-nvpi/tools/chocolateyInstall.ps1 $content -NoNewline
-
       - name: Update NPI WinGet manifests
         if: steps.nvpi-check.outputs.skip != 'true'
         shell: pwsh
@@ -373,22 +319,6 @@ jobs:
             }
             Set-Content $file.FullName $content -NoNewline
           }
-
-      - name: Pack NPI Chocolatey package
-        if: steps.nvpi-check.outputs.skip != 'true'
-        shell: pwsh
-        run: |
-          choco pack chocolatey-nvpi/nvpi.nuspec --out .
-
-      - name: Push NPI to Chocolatey
-        if: steps.nvpi-check.outputs.skip != 'true'
-        continue-on-error: true
-        shell: pwsh
-        env:
-          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
-        run: |
-          $nupkg = (Get-Item 'nvpi.*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
-          choco push $nupkg --source 'https://push.chocolatey.org' --api-key $env:CHOCO_API_KEY
 
       - name: Submit NPI to WinGet
         if: steps.nvpi-check.outputs.skip != 'true' && (steps.nvpi-check.outputs.new-version == 'true' || github.event_name == 'workflow_dispatch')
@@ -463,7 +393,7 @@ jobs:
         run: |
           git config user.name 'AmirulAndalib'
           git config user.email 'AmirulAndalib@users.noreply.github.com'
-          git add bucket/ chocolatey/ chocolatey-nvpi/ winget/ winget-nvpi/ version.txt nvpi-version.txt
+          git add bucket/ winget/ winget-nvpi/ version.txt nvpi-version.txt
           $status = git status --porcelain
           if (-not $status) {
             Write-Host 'No changes to commit'

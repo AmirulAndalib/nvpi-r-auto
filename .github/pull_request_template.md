@@ -5,7 +5,6 @@
 ## Package Manager(s) affected
 
 - [ ] WinGet
-- [ ] Chocolatey
 - [ ] Scoop
 - [ ] Workflow / CI
 - [ ] Other

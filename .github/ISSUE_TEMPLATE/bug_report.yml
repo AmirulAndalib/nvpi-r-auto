@@ -15,7 +15,6 @@ body:
       label: Package Manager
       options:
         - WinGet
-        - Chocolatey
         - Scoop
     validations:
       required: true

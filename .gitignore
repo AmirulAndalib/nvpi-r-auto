@@ -1,6 +1,3 @@
-# Chocolatey build artifacts
-*.nupkg
-
 # WinGet Create binary
 wingetcreate.exe
 

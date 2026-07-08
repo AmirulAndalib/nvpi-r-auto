@@ -2,7 +2,7 @@
 
 ## Scope
 
-This repository contains **packaging automation only** (WinGet, Chocolatey, and Scoop manifests). It does not contain the application source code.
+This repository contains **packaging automation only** (WinGet and Scoop manifests). It does not contain the application source code.
 
 ## Reporting a Vulnerability
 
