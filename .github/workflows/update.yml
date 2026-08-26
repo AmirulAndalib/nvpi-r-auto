@@ -166,28 +166,50 @@ jobs:
             'X-GitHub-Api-Version' = '2022-11-28'
             'User-Agent'           = 'nvpi-r-auto-workflow'
           }
+          # Resolve the account that owns WINGET_TOKEN. wingetcreate opens PRs as this
+          # user, so it is the only author whose open PR should suppress a submission.
+          $me = ''
+          try {
+            $me = (Invoke-RestMethod -Uri 'https://api.github.com/user' `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5).login
+            Write-Host "Submitting as: $me"
+          } catch {
+            Write-Warning "Could not resolve token owner: $($_.Exception.Message). Author filtering disabled for this run."
+          }
           # Guard 1: version folder already merged into winget-pkgs
           try {
             $null = Invoke-RestMethod `
               -Uri "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/x/xHybred/NVPIRevamped/$version" `
               -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
-            Write-Host "NVPI-R v$version already merged in microsoft/winget-pkgs — skipping submission"
+            Write-Host "NVPI-R v$version already merged in microsoft/winget-pkgs. Nothing to submit."
+            Add-Content $env:GITHUB_OUTPUT 'merged=true'
             exit 0
           } catch {
             $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { -1 }
-            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code — proceeding anyway" }
+            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code. Proceeding anyway." }
           }
-          # Guard 2: open PR already targeting this version
-          # On manual dispatch: close existing PR so we can resubmit with fresh manifests.
-          # On schedule: leave it open (avoids disturbing in-review PRs).
+          # Guard 2: open PR already targeting this version.
+          # Only OUR OWN open PR suppresses submission. A third-party PR for the same
+          # package must never block us: it can carry wrong metadata, fail validation,
+          # or go stale, and treating it as ours left the package permanently unshipped.
+          # On manual dispatch: close our own existing PR so we can resubmit fresh.
+          # On schedule: leave our own PR open (avoids disturbing in-review PRs).
           try {
             $q = [Uri]::EscapeDataString("repo:microsoft/winget-pkgs is:pr is:open xHybred.NVPIRevamped $version")
             $search = Invoke-RestMethod -Uri "https://api.github.com/search/issues?q=$q" `
               -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
-            if ($search.total_count -gt 0) {
-              $prNumber = $search.items[0].number
+            $ours = @()
+            foreach ($item in $search.items) {
+              if ($me -and $item.user.login -eq $me) {
+                $ours += $item
+              } else {
+                Write-Host "Open PR #$($item.number) by $($item.user.login) targets the same version but is not ours. Proceeding with our submission."
+              }
+            }
+            if ($ours.Count -gt 0) {
+              $prNumber = $ours[0].number
               if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
-                Write-Host "Manual dispatch: closing existing PR #$prNumber to resubmit fresh"
+                Write-Host "Manual dispatch: closing our existing PR #$prNumber to resubmit fresh"
                 try {
                   Invoke-RestMethod `
                     -Uri "https://api.github.com/repos/microsoft/winget-pkgs/pulls/$prNumber" `
@@ -197,21 +219,28 @@ jobs:
                   Write-Warning "Failed to close PR #$($prNumber): $($_.Exception.Message)"
                 }
               } else {
-                Write-Host "NVPI-R v$version already has open PR #$prNumber — skipping (use workflow_dispatch to force resubmit)"
+                Write-Host "NVPI-R v$version already has our open PR #$prNumber. Skipping (use workflow_dispatch to force resubmit)."
                 exit 0
               }
             }
           } catch {
-            Write-Warning "PR search check failed: $($_.Exception.Message) — proceeding anyway"
+            Write-Warning "PR search check failed: $($_.Exception.Message). Proceeding anyway."
           }
           if (-not (Test-Path wingetcreate.exe)) {
             Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           }
+          # pwsh does not fail a step on a nonzero native exit code, so check it
+          # explicitly. Reporting success here would bump the version file and
+          # permanently mark an unshipped version as shipped.
           winget validate --manifest winget
+          if ($LASTEXITCODE -ne 0) { Write-Error 'winget validate failed'; exit 1 }
           .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget
+          if ($LASTEXITCODE -ne 0) { Write-Error 'wingetcreate submit failed'; exit 1 }
+          Add-Content $env:GITHUB_OUTPUT 'submitted=true'
+          Write-Host "NVPI-R v$version submitted to microsoft/winget-pkgs"
 
       - name: Bump NVPI-R version file
-        if: steps.nvpir-check.outputs.skip != 'true' && steps.nvpir-winget.outcome == 'success'
+        if: steps.nvpir-check.outputs.skip != 'true' && (steps.nvpir-winget.outputs.submitted == 'true' || steps.nvpir-winget.outputs.merged == 'true')
         shell: pwsh
         run: |
           Set-Content version.txt '${{ steps.nvpir-release.outputs.version }}'
@@ -335,28 +364,50 @@ jobs:
             'X-GitHub-Api-Version' = '2022-11-28'
             'User-Agent'           = 'nvpi-r-auto-workflow'
           }
+          # Resolve the account that owns WINGET_TOKEN. wingetcreate opens PRs as this
+          # user, so it is the only author whose open PR should suppress a submission.
+          $me = ''
+          try {
+            $me = (Invoke-RestMethod -Uri 'https://api.github.com/user' `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5).login
+            Write-Host "Submitting as: $me"
+          } catch {
+            Write-Warning "Could not resolve token owner: $($_.Exception.Message). Author filtering disabled for this run."
+          }
           # Guard 1: version folder already merged into winget-pkgs
           try {
             $null = Invoke-RestMethod `
               -Uri "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/o/Orbmu2k/nvidiaProfileInspector/$version" `
               -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
-            Write-Host "NPI v$version already merged in microsoft/winget-pkgs — skipping submission"
+            Write-Host "NPI v$version already merged in microsoft/winget-pkgs. Nothing to submit."
+            Add-Content $env:GITHUB_OUTPUT 'merged=true'
             exit 0
           } catch {
             $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { -1 }
-            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code — proceeding anyway" }
+            if ($code -ne 404) { Write-Warning "winget-pkgs contents check returned HTTP $code. Proceeding anyway." }
           }
-          # Guard 2: open PR already targeting this version
-          # On manual dispatch: close existing PR so we can resubmit with fresh manifests.
-          # On schedule: leave it open (avoids disturbing in-review PRs).
+          # Guard 2: open PR already targeting this version.
+          # Only OUR OWN open PR suppresses submission. A third-party PR for the same
+          # package must never block us: it can carry wrong metadata, fail validation,
+          # or go stale, and treating it as ours left the package permanently unshipped.
+          # On manual dispatch: close our own existing PR so we can resubmit fresh.
+          # On schedule: leave our own PR open (avoids disturbing in-review PRs).
           try {
             $q = [Uri]::EscapeDataString("repo:microsoft/winget-pkgs is:pr is:open Orbmu2k.nvidiaProfileInspector $version")
             $search = Invoke-RestMethod -Uri "https://api.github.com/search/issues?q=$q" `
               -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
-            if ($search.total_count -gt 0) {
-              $prNumber = $search.items[0].number
+            $ours = @()
+            foreach ($item in $search.items) {
+              if ($me -and $item.user.login -eq $me) {
+                $ours += $item
+              } else {
+                Write-Host "Open PR #$($item.number) by $($item.user.login) targets the same version but is not ours. Proceeding with our submission."
+              }
+            }
+            if ($ours.Count -gt 0) {
+              $prNumber = $ours[0].number
               if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
-                Write-Host "Manual dispatch: closing existing PR #$prNumber to resubmit fresh"
+                Write-Host "Manual dispatch: closing our existing PR #$prNumber to resubmit fresh"
                 try {
                   Invoke-RestMethod `
                     -Uri "https://api.github.com/repos/microsoft/winget-pkgs/pulls/$prNumber" `
@@ -366,21 +417,28 @@ jobs:
                   Write-Warning "Failed to close PR #$($prNumber): $($_.Exception.Message)"
                 }
               } else {
-                Write-Host "NPI v$version already has open PR #$prNumber — skipping (use workflow_dispatch to force resubmit)"
+                Write-Host "NPI v$version already has our open PR #$prNumber. Skipping (use workflow_dispatch to force resubmit)."
                 exit 0
               }
             }
           } catch {
-            Write-Warning "PR search check failed: $($_.Exception.Message) — proceeding anyway"
+            Write-Warning "PR search check failed: $($_.Exception.Message). Proceeding anyway."
           }
           if (-not (Test-Path wingetcreate.exe)) {
             Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           }
+          # pwsh does not fail a step on a nonzero native exit code, so check it
+          # explicitly. Reporting success here would bump the version file and
+          # permanently mark an unshipped version as shipped.
           winget validate --manifest winget-nvpi
+          if ($LASTEXITCODE -ne 0) { Write-Error 'winget validate failed'; exit 1 }
           .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget-nvpi
+          if ($LASTEXITCODE -ne 0) { Write-Error 'wingetcreate submit failed'; exit 1 }
+          Add-Content $env:GITHUB_OUTPUT 'submitted=true'
+          Write-Host "NPI v$version submitted to microsoft/winget-pkgs"
 
       - name: Bump NPI version file
-        if: steps.nvpi-check.outputs.skip != 'true' && steps.nvpi-winget.outcome == 'success'
+        if: steps.nvpi-check.outputs.skip != 'true' && (steps.nvpi-winget.outputs.submitted == 'true' || steps.nvpi-winget.outputs.merged == 'true')
         shell: pwsh
         run: |
           Set-Content nvpi-version.txt '${{ steps.nvpi-release.outputs.version }}'
