@@ -229,13 +229,20 @@ jobs:
           if (-not (Test-Path wingetcreate.exe)) {
             Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           }
-          # pwsh does not fail a step on a nonzero native exit code, so check it
-          # explicitly. Reporting success here would bump the version file and
-          # permanently mark an unshipped version as shipped.
-          winget validate --manifest winget
-          if ($LASTEXITCODE -ne 0) { Write-Error 'winget validate failed'; exit 1 }
+          # pwsh does not fail a step on a nonzero native exit code, so check both
+          # commands explicitly. Reporting success here would bump the version file
+          # and permanently mark an unshipped version as shipped.
+          # winget returns a nonzero code (0x8A15003D) when validation succeeds with
+          # warnings, so match on the result text rather than the exit code.
+          $validateOutput = (& winget validate --manifest winget 2>&1 | Out-String)
+          $validateExit = $LASTEXITCODE
+          Write-Host $validateOutput.Trim()
+          if ($validateOutput -notmatch 'Manifest validation succeeded') {
+            Write-Error "winget validate failed (exit $validateExit)"
+            exit 1
+          }
           .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget
-          if ($LASTEXITCODE -ne 0) { Write-Error 'wingetcreate submit failed'; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Error "wingetcreate submit failed (exit $LASTEXITCODE)"; exit 1 }
           Add-Content $env:GITHUB_OUTPUT 'submitted=true'
           Write-Host "NVPI-R v$version submitted to microsoft/winget-pkgs"
 
@@ -427,13 +434,20 @@ jobs:
           if (-not (Test-Path wingetcreate.exe)) {
             Invoke-WebRequest -Uri 'https://aka.ms/wingetcreate/latest' -OutFile wingetcreate.exe -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 5
           }
-          # pwsh does not fail a step on a nonzero native exit code, so check it
-          # explicitly. Reporting success here would bump the version file and
-          # permanently mark an unshipped version as shipped.
-          winget validate --manifest winget-nvpi
-          if ($LASTEXITCODE -ne 0) { Write-Error 'winget validate failed'; exit 1 }
+          # pwsh does not fail a step on a nonzero native exit code, so check both
+          # commands explicitly. Reporting success here would bump the version file
+          # and permanently mark an unshipped version as shipped.
+          # winget returns a nonzero code (0x8A15003D) when validation succeeds with
+          # warnings, so match on the result text rather than the exit code.
+          $validateOutput = (& winget validate --manifest winget-nvpi 2>&1 | Out-String)
+          $validateExit = $LASTEXITCODE
+          Write-Host $validateOutput.Trim()
+          if ($validateOutput -notmatch 'Manifest validation succeeded') {
+            Write-Error "winget validate failed (exit $validateExit)"
+            exit 1
+          }
           .\wingetcreate.exe submit --token $env:WINGET_TOKEN winget-nvpi
-          if ($LASTEXITCODE -ne 0) { Write-Error 'wingetcreate submit failed'; exit 1 }
+          if ($LASTEXITCODE -ne 0) { Write-Error "wingetcreate submit failed (exit $LASTEXITCODE)"; exit 1 }
           Add-Content $env:GITHUB_OUTPUT 'submitted=true'
           Write-Host "NPI v$version submitted to microsoft/winget-pkgs"
 
