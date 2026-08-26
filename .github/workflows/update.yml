@@ -457,6 +457,92 @@ jobs:
         run: |
           Set-Content nvpi-version.txt '${{ steps.nvpi-release.outputs.version }}'
 
+      # ── Shipped-state drift check ───────────────────────────────────
+
+      - name: Verify shipped state
+        if: steps.nvpir-check.outputs.skip == 'true' || steps.nvpi-check.outputs.skip == 'true'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          # A version file claiming "shipped" is only trustworthy while that version
+          # is merged upstream or still covered by an open PR of ours. If our PR is
+          # closed without merging, the version file keeps every scheduled run on the
+          # "already up to date" path and the package silently never ships again.
+          # This step does not resubmit on its own (that would spam winget-pkgs with
+          # a PR a moderator may have closed deliberately). It raises a warning so a
+          # human can dispatch the workflow to resubmit.
+          $headers = @{
+            Authorization          = "Bearer $env:WINGET_TOKEN"
+            Accept                 = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+            'User-Agent'           = 'nvpi-r-auto-workflow'
+          }
+          $me = ''
+          try {
+            $me = (Invoke-RestMethod -Uri 'https://api.github.com/user' `
+              -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5).login
+          } catch {
+            Write-Warning "Could not resolve token owner: $($_.Exception.Message). Skipping drift check."
+            exit 0
+          }
+          $targets = @(
+            @{
+              Name    = 'NVPI-R'
+              Skip    = '${{ steps.nvpir-check.outputs.skip }}'
+              Version = '${{ steps.nvpir-release.outputs.version }}'
+              Path    = 'x/xHybred/NVPIRevamped'
+              Id      = 'xHybred.NVPIRevamped'
+            },
+            @{
+              Name    = 'NPI'
+              Skip    = '${{ steps.nvpi-check.outputs.skip }}'
+              Version = '${{ steps.nvpi-release.outputs.version }}'
+              Path    = 'o/Orbmu2k/nvidiaProfileInspector'
+              Id      = 'Orbmu2k.nvidiaProfileInspector'
+            }
+          )
+          foreach ($t in $targets) {
+            if ($t.Skip -ne 'true') { continue }
+            $merged = $false
+            try {
+              $null = Invoke-RestMethod `
+                -Uri "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/$($t.Path)/$($t.Version)" `
+                -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+              $merged = $true
+            } catch {
+              $code = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { -1 }
+              if ($code -ne 404) {
+                Write-Warning "$($t.Name): contents check returned HTTP $code. Cannot confirm shipped state."
+                continue
+              }
+            }
+            if ($merged) {
+              Write-Host "$($t.Name) v$($t.Version) is merged upstream."
+              continue
+            }
+            $openPr = $null
+            try {
+              $q = [Uri]::EscapeDataString("repo:microsoft/winget-pkgs is:pr is:open $($t.Id) $($t.Version)")
+              $search = Invoke-RestMethod -Uri "https://api.github.com/search/issues?q=$q" `
+                -Headers $headers -MaximumRetryCount 2 -RetryIntervalSec 5
+              foreach ($item in $search.items) {
+                if ($item.user.login -eq $me) { $openPr = $item.number; break }
+              }
+            } catch {
+              Write-Warning "$($t.Name): PR search failed: $($_.Exception.Message). Cannot confirm shipped state."
+              continue
+            }
+            if ($openPr) {
+              Write-Host "$($t.Name) v$($t.Version) has our open PR #$openPr awaiting review."
+              continue
+            }
+            $msg = "$($t.Name) v$($t.Version) is pinned as shipped but is neither merged upstream nor covered by an open PR from $me. Run this workflow via workflow_dispatch to resubmit."
+            Write-Warning $msg
+            Add-Content $env:GITHUB_STEP_SUMMARY "- :warning: $msg"
+          }
+
       # ── Commit ──────────────────────────────────────────────────────
 
       - name: Commit and push
