@@ -27,9 +27,7 @@
     "Remove-Item \"$desktop\\NVPI Revamped.lnk\" -Force -ErrorAction SilentlyContinue"
   ],
   "persist": [
-    "NVPI Revamped App/CustomSettingNames.xml",
-    "NVPI Revamped App/Settings.xml",
-    "NVPI Revamped App/Reference.xml"
+    "NVPI Revamped App/Settings.xml"
   ],
   "notes": "Desktop and Start Menu shortcuts are created automatically. Settings are persisted across updates. Package maintained by AmirulAndalib (https://github.com/AmirulAndalib).",
   "checkver": {
