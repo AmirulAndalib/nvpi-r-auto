@@ -63,6 +63,18 @@ jobs:
             exit 1
           }
           $url = $asset.browser_download_url
+          # Tag, version and URL come from the upstream repo and are later pasted into
+          # pwsh scripts, GITHUB_OUTPUT and YAML. Fail closed on anything outside a
+          # strict charset. Use \A and \z, not ^ and $: in .NET, $ also matches before
+          # a trailing newline, which would let a tag inject extra GITHUB_OUTPUT lines.
+          if ($version -cnotmatch '\A[0-9]+(\.[0-9]+){1,3}\z' -or $response.tag_name -cnotmatch '\Av?[0-9]+(\.[0-9]+){1,3}\z') {
+            Write-Error 'NVPI-R: refusing unexpected release tag format'
+            exit 1
+          }
+          if ($url -cnotmatch '\Ahttps://github\.com/xHybred/NvidiaProfileInspectorRevamped/releases/download/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.zip\z') {
+            Write-Error 'NVPI-R: refusing unexpected asset URL'
+            exit 1
+          }
           Add-Content $env:GITHUB_OUTPUT "version=$version"
           Add-Content $env:GITHUB_OUTPUT "tag=$($response.tag_name)"
           Add-Content $env:GITHUB_OUTPUT "url=$url"
@@ -99,10 +111,22 @@ jobs:
           Add-Content $env:GITHUB_OUTPUT "sha256=$sha256"
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $z = [System.IO.Compression.ZipFile]::OpenRead($tmp)
-          $exeEntry = $z.Entries | Where-Object { $_.Name -eq 'NVPI-R.exe' } | Select-Object -First 1
+          # Some releases (7.0.0.0, 7.0.2.0) ship extra NVPI-R.exe copies for the classic
+          # dark-mode themes in deeper folders, listed before the main exe. Take the
+          # shallowest entry, which is the main app.
+          $exeEntry = $z.Entries | Where-Object { $_.Name -eq 'NVPI-R.exe' } |
+            Sort-Object { ($_.FullName -split '/').Count }, FullName | Select-Object -First 1
           $z.Dispose()
           if (-not $exeEntry) { Write-Error 'NVPI-R.exe not found in ZIP; upstream may have renamed the exe'; exit 1 }
           $exePath = $exeEntry.FullName
+          # The folder part comes from the upstream ZIP. It is written unquoted into YAML
+          # (RelativeFilePath), into pwsh scripts and into a -replace replacement string,
+          # so ' $ : # and newlines must never get through. Do not widen this charset
+          # without checking all three sinks.
+          if ($exePath -cnotmatch '\A([A-Za-z0-9 ._-]+/)*NVPI-R\.exe\z' -or $exePath.Contains('..')) {
+            Write-Error 'NVPI-R: refusing unexpected exe path inside the release ZIP'
+            exit 1
+          }
           Add-Content $env:GITHUB_OUTPUT "exepath=$exePath"
           Write-Host "Exe path in ZIP: $exePath"
           Remove-Item $tmp -Force
@@ -286,6 +310,18 @@ jobs:
           $releaseDate = ([datetime]$release.published_at).ToString('yyyy-MM-dd')
           $asset = $release.assets | Where-Object { $_.name -eq 'nvidiaProfileInspector.zip' } | Select-Object -First 1
           $url = $asset.browser_download_url
+          # Tag, version and URL come from the upstream repo and are later pasted into
+          # pwsh scripts, GITHUB_OUTPUT and YAML. Fail closed on anything outside a
+          # strict charset. Use \A and \z, not ^ and $: in .NET, $ also matches before
+          # a trailing newline, which would let a tag inject extra GITHUB_OUTPUT lines.
+          if ($version -cnotmatch '\A[0-9]+(\.[0-9]+){1,3}\z' -or $release.tag_name -cnotmatch '\Av?[0-9]+(\.[0-9]+){1,3}\z') {
+            Write-Error 'NPI: refusing unexpected release tag format'
+            exit 1
+          }
+          if ($url -cnotmatch '\Ahttps://github\.com/Orbmu2k/nvidiaProfileInspector/releases/download/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.zip\z') {
+            Write-Error 'NPI: refusing unexpected asset URL'
+            exit 1
+          }
           Add-Content $env:GITHUB_OUTPUT "version=$version"
           Add-Content $env:GITHUB_OUTPUT "tag=$($release.tag_name)"
           Add-Content $env:GITHUB_OUTPUT "url=$url"
