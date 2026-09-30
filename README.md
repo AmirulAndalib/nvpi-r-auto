@@ -113,6 +113,8 @@ For Scoop, no extra steps are needed. Both manifests live in the `bucket/` folde
 
 Desktop and Start Menu shortcuts are created automatically by Scoop for both packages. WinGet does not create shortcuts (platform limitation for portable packages), but adds `nvpi-r` or `nvpi` to your PATH so you can launch either from any terminal. Old Scoop versions are cleaned up automatically on update.
 
-Settings files (`CustomSettingNames.xml`, `Settings.xml`, `Reference.xml`) are persisted across Scoop updates so your configuration survives upgrades. WinGet preserves settings in its packages directory across upgrades.
+Scoop persists only `Settings.xml` for NVPI Revamped (window layout, filters, hidden groups), so it survives updates. `CustomSettingNames.xml` and `Reference.xml` are the setting databases upstream ships with each release, so they are replaced on every update and you always get the latest driver setting definitions. NVIDIA Profile Inspector persists nothing, since profiles are stored in the NVIDIA driver. If you installed with Scoop before this change, old copies of the database files may remain under `persist\` and are ignored.
 
-If the zip structure changes in a future upstream release and the Scoop `bin` path breaks, open an issue and it will be patched promptly.
+WinGet has no persistence for portable packages. An upgrade overwrites the files shipped in the release, including `Settings.xml`, so back that file up before upgrading if you changed it.
+
+The workflow reads the exe path from each release ZIP, so a change in the upstream folder layout is picked up automatically for both Scoop and WinGet. If an install still breaks, open an issue.
