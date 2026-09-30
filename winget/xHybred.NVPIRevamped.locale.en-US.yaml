@@ -26,7 +26,7 @@ ReleaseNotesUrl: https://github.com/xHybred/NvidiaProfileInspectorRevamped/relea
 InstallationNotes: |-
   Run 'nvpi-r' from any terminal to launch NVPI Revamped.
   WinGet portable packages do not create desktop or Start Menu shortcuts.
-  Settings are preserved in the install directory across upgrades.
+  WinGet replaces Settings.xml on upgrade, so back it up first if you changed the window layout or filters.
   Package maintained by AmirulAndalib (https://github.com/AmirulAndalib).
 ManifestType: defaultLocale
 ManifestVersion: 1.12.0
